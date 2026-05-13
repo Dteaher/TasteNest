@@ -1,0 +1,22 @@
+<UserControl x:Class="RecipeKeeper.Wpf.Views.ShoppingListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource PageCard}">
+        <DockPanel>
+            <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+                <TextBlock Text="Список покупок" Style="{StaticResource PageTitle}" Margin="0,0,24,0" />
+                <Button Content="Сформировать заново" Style="{StaticResource PrimaryButton}" Click="GenerateButton_Click" />
+                <Button Content="Отметить / вернуть" Click="ToggleButton_Click" />
+                <Button Content="Удалить" Style="{StaticResource DangerButton}" Click="DeleteButton_Click" />
+                <Button Content="Очистить список" Click="ClearButton_Click" />
+            </WrapPanel>
+            <DataGrid x:Name="ShoppingGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="Куплено" Binding="{Binding IsBought}" Width="90" />
+                    <DataGridTextColumn Header="Продукт" Binding="{Binding Name}" Width="*" />
+                    <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="220" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+    </Border>
+</UserControl>

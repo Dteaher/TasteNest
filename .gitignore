@@ -1,0 +1,32 @@
+.vs/
+.idea/
+.vscode/
+
+bin/
+obj/
+Debug/
+Release/
+
+*.user
+*.suo
+*.cache
+*.log
+
+app.db
+app.db-shm
+app.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Local SQL/server settings contain machine names and passwords.
+RecipeKeeper.Wpf/Configuration/TasteNest.settings.json
+RecipeKeeper.Wpf/Deployment/TasteNest.client.settings.json
+TasteNest_User_Version/
+TasteNest_Server_Admin/
+
+# Generated/temporary study artifacts.
+extracted_lectures/
+output/
+tmp/
+build_probability_doc.py

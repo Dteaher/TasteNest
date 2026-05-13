@@ -1,0 +1,11 @@
+{
+  "ServerName": "localhost\\SQLEXPRESS",
+  "DatabaseName": "RecipeKeeperDb",
+  "UseSqlLogin": false,
+  "SqlUser": "tastenest_app",
+  "SqlPassword": "",
+  "Encrypt": true,
+  "TrustServerCertificate": true,
+  "ConnectTimeoutSeconds": 5,
+  "CreateSqlLoginForClients": false
+}

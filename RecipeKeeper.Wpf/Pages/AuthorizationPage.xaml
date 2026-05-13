@@ -1,0 +1,55 @@
+<Page x:Class="RecipeKeeper.Wpf.Pages.AuthorizationPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Авторизация"
+      Background="{StaticResource AppBackgroundBrush}">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Grid MinWidth="460" MinHeight="520">
+            <Border Style="{StaticResource PageCard}" MaxWidth="460" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="Вход в TasteNest" Style="{StaticResource PageTitle}" />
+
+                    <TextBlock Text="Логин или email" Style="{StaticResource LabelText}" />
+                    <TextBox x:Name="EmailTextBox"
+                             TextChanged="Input_Changed"
+                             KeyDown="Input_KeyDown" />
+
+                    <TextBlock Text="Пароль" Style="{StaticResource LabelText}" />
+                    <PasswordBox x:Name="PasswordBox"
+                                 PasswordChanged="Input_Changed"
+                                 KeyDown="Input_KeyDown" />
+
+                    <CheckBox x:Name="RememberMeCheckBox"
+                              Content="Запомнить вход"
+                              Margin="0,10,0,8" />
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="LoginButton"
+                                Content="Войти"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="LoginButton_Click" />
+                        <Button Content="Регистрация"
+                                Click="RegisterButton_Click" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="LoginHintTextBlock"
+                               Style="{StaticResource MutedText}"
+                               Margin="0,6,0,0" />
+
+                    <TextBlock x:Name="StatusTextBlock"
+                               Style="{StaticResource MutedText}"
+                               Margin="0,10,0,0" />
+
+                    <Border Background="#F7F5ED" CornerRadius="8" Padding="12" Margin="0,18,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Стартовые аккаунты" FontWeight="Bold" />
+                            <TextBlock Text="admin / admin — администратор" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
+                            <TextBlock Text="operator / operator — оператор" Style="{StaticResource MutedText}" />
+                            <TextBlock Text="user / user — пользователь" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</Page>

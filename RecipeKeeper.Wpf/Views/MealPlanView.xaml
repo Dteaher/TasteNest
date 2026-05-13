@@ -1,0 +1,33 @@
+<UserControl x:Class="RecipeKeeper.Wpf.Views.MealPlanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid MinWidth="620">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320" MinWidth="280" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border Style="{StaticResource PageCard}" Margin="0,0,16,0">
+            <StackPanel>
+                <TextBlock Text="План питания" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="День" Style="{StaticResource LabelText}" />
+                <ComboBox x:Name="DayComboBox" />
+                <TextBlock Text="Приём пищи" Style="{StaticResource LabelText}" />
+                <ComboBox x:Name="MealComboBox" />
+                <TextBlock Text="Рецепт" Style="{StaticResource LabelText}" />
+                <ComboBox x:Name="RecipeComboBox" DisplayMemberPath="Title" />
+                <Button Content="Добавить в план" Style="{StaticResource PrimaryButton}" Click="AddButton_Click" />
+                <Button Content="Удалить день" Style="{StaticResource DangerButton}" Click="DeleteButton_Click" />
+                <Button Content="Сформировать покупки" Click="ShoppingButton_Click" />
+            </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Style="{StaticResource PageCard}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="План на неделю" Style="{StaticResource PageTitle}" />
+                <ListBox x:Name="PlanListBox"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         MouseDoubleClick="PlanListBox_MouseDoubleClick" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

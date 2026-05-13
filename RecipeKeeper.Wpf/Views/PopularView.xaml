@@ -1,0 +1,14 @@
+<UserControl x:Class="RecipeKeeper.Wpf.Views.PopularView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource PageCard}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="Популярные рецепты" Style="{StaticResource PageTitle}" />
+            </StackPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <WrapPanel x:Name="RecipesPanel" />
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

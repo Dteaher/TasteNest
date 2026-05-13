@@ -1,0 +1,273 @@
+<UserControl x:Class="RecipeKeeper.Wpf.Views.ProductsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Auto"
+                  CanContentScroll="False"
+                  PanningMode="Both">
+        <Grid MinWidth="720">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <UniformGrid Columns="4" Margin="0,0,0,14">
+                <Border Style="{StaticResource SummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Всего продуктов" Style="{StaticResource MutedText}" />
+                        <TextBlock x:Name="TotalCountText" FontSize="28" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Скоро истекают" Style="{StaticResource MutedText}" />
+                        <TextBlock x:Name="SoonCountText" FontSize="28" FontWeight="Bold" Foreground="{StaticResource AccentDarkBrush}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Просрочены" Style="{StaticResource MutedText}" />
+                        <TextBlock x:Name="ExpiredCountText" FontSize="28" FontWeight="Bold" Foreground="#8C2B21" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Категорий" Style="{StaticResource MutedText}" />
+                        <TextBlock x:Name="CategoryCountText" FontSize="28" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340" MinWidth="300" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource PageCard}" Margin="0,0,16,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  MaxHeight="720"
+                                  CanContentScroll="False">
+                        <StackPanel>
+                            <TextBlock Text="Карточка продукта" Style="{StaticResource PageTitle}" />
+                            <TextBlock Text="Добавьте продукт или выберите строку справа, чтобы быстро изменить данные." Style="{StaticResource MutedText}" Margin="0,0,0,16" />
+
+                            <TextBlock Text="Название" Style="{StaticResource LabelText}" />
+                            <TextBox x:Name="NameTextBox" Style="{StaticResource AppTextBox}" />
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="110" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,10,0">
+                                    <TextBlock Text="Количество" Style="{StaticResource LabelText}" />
+                                    <TextBox x:Name="QuantityTextBox" Style="{StaticResource AppTextBox}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Ед." Style="{StaticResource LabelText}" />
+                                    <ComboBox x:Name="UnitComboBox" Style="{StaticResource AppComboBox}" IsEditable="True" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Категория" Style="{StaticResource LabelText}" />
+                            <ComboBox x:Name="CategoryComboBox" Style="{StaticResource AppComboBox}" IsEditable="True" />
+
+                            <Border Background="#F7F5ED" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Срок годности" Style="{StaticResource LabelText}" />
+                                            <TextBlock x:Name="ExpiryPreviewTextBlock" Text="Срок не указан" FontWeight="SemiBold" Foreground="{StaticResource AccentDarkBrush}" Margin="0,5,0,0" />
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Style="{StaticResource StatusBadge}" Background="#E7EFEA" VerticalAlignment="Top">
+                                            <TextBlock Text="календарь" Foreground="{StaticResource AccentDarkBrush}" FontWeight="SemiBold" FontSize="12" />
+                                        </Border>
+                                    </Grid>
+
+                                    <WrapPanel Margin="0,0,0,6">
+                                        <Button Content="Сегодня" MinWidth="86" Click="ExpiryTodayButton_Click" />
+                                        <Button Content="+7 дней" MinWidth="86" Click="ExpiryWeekButton_Click" />
+                                        <Button Content="+30 дней" MinWidth="96" Click="ExpiryMonthButton_Click" />
+                                        <Button Content="Без срока" MinWidth="102" Click="ExpiryClearButton_Click" />
+                                    </WrapPanel>
+                                    <DatePicker x:Name="ExpiresDatePicker" Style="{StaticResource AppDatePicker}" SelectedDateChanged="ExpiresDatePicker_SelectedDateChanged" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="Доп. заметка" Style="{StaticResource LabelText}" />
+                            <TextBox x:Name="NoteTextBox" Style="{StaticResource AppTextBox}" Height="82" AcceptsReturn="True" TextWrapping="Wrap" />
+
+                            <Grid Margin="0,4,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button Content="Добавить" Style="{StaticResource PrimaryButton}" Click="AddButton_Click" Margin="0,4,6,4" />
+                                <Button Grid.Column="1" Content="Сохранить" Click="SaveButton_Click" Margin="6,4,0,4" />
+                                <Button Grid.Column="0" Grid.Row="1" Content="Очистить" Click="ClearButton_Click" Margin="0,4,6,4" />
+                                <Button Grid.Column="1" Grid.Row="1" Content="Удалить" Style="{StaticResource DangerButton}" Click="DeleteButton_Click" Margin="6,4,0,4" />
+                            </Grid>
+
+                            <TextBlock x:Name="StatusTextBlock" Style="{StaticResource MutedText}" Margin="0,12,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource PageCard}">
+                    <DockPanel LastChildFill="True">
+                        <StackPanel DockPanel.Dock="Top">
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Список продуктов" Style="{StaticResource PageTitle}" />
+                                    <TextBlock x:Name="FilteredCountText" Style="{StaticResource MutedText}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Сбросить фильтры" Click="ResetFiltersButton_Click" VerticalAlignment="Top" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,10,0">
+                                    <TextBlock Text="Поиск" Style="{StaticResource LabelText}" />
+                                    <TextBox x:Name="FilterTextBox" Style="{StaticResource AppTextBox}" TextChanged="Filter_Changed" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                    <TextBlock Text="Категория" Style="{StaticResource LabelText}" />
+                                    <ComboBox x:Name="FilterCategoryComboBox" Style="{StaticResource AppComboBox}" SelectionChanged="Filter_Changed" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                                    <TextBlock Text="Срок" Style="{StaticResource LabelText}" />
+                                    <ComboBox x:Name="ExpiryFilterComboBox" Style="{StaticResource AppComboBox}" SelectionChanged="Filter_Changed" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="3">
+                                    <TextBlock Text="Сортировка" Style="{StaticResource LabelText}" />
+                                    <ComboBox x:Name="SortComboBox" Style="{StaticResource AppComboBox}" SelectionChanged="Filter_Changed" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <Grid>
+                            <DataGrid x:Name="ProductsGrid"
+                                      Style="{StaticResource StyledDataGrid}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      MaxHeight="560"
+                                      SelectionChanged="ProductsGrid_SelectionChanged">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Продукт" Width="2*" MinWidth="200">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="8,0">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" />
+                                                    <TextBlock Text="{Binding NotePreview}" Foreground="{StaticResource MutedTextBrush}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Количество" Binding="{Binding DisplayQuantity}" Width="*" MinWidth="110" />
+                                    <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="*" MinWidth="120" />
+                                    <DataGridTextColumn Header="Срок" Binding="{Binding ExpiryText}" Width="*" MinWidth="110" />
+                                    <DataGridTemplateColumn Header="Статус" Width="*" MinWidth="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource StatusBadge}" Background="{Binding StatusBrush}" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusForeground}" FontWeight="SemiBold" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Border x:Name="EmptyStateBorder"
+                                    Background="#FFFDF8"
+                                    BorderBrush="{StaticResource BorderBrushSoft}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="28"
+                                    Visibility="Collapsed"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Width="360">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="+" FontSize="38" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Продукты не найдены" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,8,0,4" />
+                                    <TextBlock Text="Добавьте первый продукт или измените фильтры, чтобы увидеть список." Style="{StaticResource MutedText}" TextAlignment="Center" />
+                                    <Button Content="Добавить продукт" Style="{StaticResource PrimaryButton}" Click="FocusAddProductButton_Click" HorizontalAlignment="Center" Margin="0,16,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Style="{StaticResource PageCard}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Полезно сейчас" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Короткие действия и подсказки по вашим продуктам, покупкам и рецептам." Style="{StaticResource MutedText}" Margin="0,0,0,14" />
+
+                    <WrapPanel>
+                        <Button Style="{StaticResource InsightCard}" Tag="Products" Click="InsightNavigate_Click">
+                            <StackPanel>
+                                <TextBlock Text="!" Style="{StaticResource InsightIcon}" />
+                                <TextBlock Text="Скоро истекают продукты" FontSize="18" FontWeight="Bold" />
+                                <TextBlock x:Name="ExpiryInsightText" Style="{StaticResource MutedText}" Margin="0,6,0,8" />
+                                <ItemsControl x:Name="ExpiryInsightItems" />
+                                <TextBlock Text="Открыть продукты" Foreground="{StaticResource AccentDarkBrush}" FontWeight="Bold" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource InsightCard}" Tag="Search" Click="InsightNavigate_Click">
+                            <StackPanel>
+                                <TextBlock Text="?" Style="{StaticResource InsightIcon}" />
+                                <TextBlock Text="Что можно приготовить" FontSize="18" FontWeight="Bold" />
+                                <TextBlock x:Name="CookInsightText" Style="{StaticResource MutedText}" Margin="0,6,0,8" />
+                                <ItemsControl x:Name="CookInsightItems" />
+                                <TextBlock Text="Подобрать рецепты" Foreground="{StaticResource AccentDarkBrush}" FontWeight="Bold" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource InsightCard}" Tag="Shopping" Click="InsightNavigate_Click">
+                            <StackPanel>
+                                <TextBlock Text="+" Style="{StaticResource InsightIcon}" />
+                                <TextBlock Text="Нужно докупить" FontSize="18" FontWeight="Bold" />
+                                <TextBlock x:Name="ShoppingInsightText" Style="{StaticResource MutedText}" Margin="0,6,0,8" />
+                                <ItemsControl x:Name="ShoppingInsightItems" />
+                                <TextBlock Text="Перейти к покупкам" Foreground="{StaticResource AccentDarkBrush}" FontWeight="Bold" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Style="{StaticResource InsightCard}" Click="RecipeOfDayButton_Click">
+                            <StackPanel>
+                                <TextBlock Text="★" Style="{StaticResource InsightIcon}" />
+                                <TextBlock Text="Рецепт дня" FontSize="18" FontWeight="Bold" />
+                                <TextBlock x:Name="RecipeOfDayTitleText" FontWeight="Bold" Margin="0,8,0,2" />
+                                <TextBlock x:Name="RecipeOfDaySummaryText" Style="{StaticResource MutedText}" />
+                                <TextBlock Text="Открыть рецепт" Foreground="{StaticResource AccentDarkBrush}" FontWeight="Bold" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>TasteNest</AssemblyName>
+    <ApplicationIcon>Assets\TasteNest.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\TasteNest.ico" />
+    <Resource Include="Assets\TasteNestIcon.png" />
+    <Resource Include="Assets\TasteNestLogo.png" />
+    <Resource Include="Assets\TasteNestFullLogo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Configuration\TasteNest.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>TasteNest.settings.json</TargetPath>
+    </None>
+    <None Update="Deployment\TasteNest.client.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>TasteNest.client.settings.json</TargetPath>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,50 @@
+<UserControl x:Class="RecipeKeeper.Wpf.Views.SearchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="270" MinWidth="240" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource PageCard}" Padding="18" Margin="0,0,12,0">
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="Фильтры" FontSize="22" FontWeight="Bold" Margin="0,0,0,12" />
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock Text="Поиск по названию" Style="{StaticResource LabelText}" />
+                        <TextBox x:Name="SearchTextBox" Style="{StaticResource AppTextBox}" />
+
+                        <TextBlock Text="Категория" Style="{StaticResource LabelText}" />
+                        <ComboBox x:Name="CategoryComboBox" Style="{StaticResource AppComboBox}" DisplayMemberPath="Name" />
+
+                        <TextBlock Text="Теги" Style="{StaticResource LabelText}" />
+                        <TextBox x:Name="TagsTextBox" Style="{StaticResource AppTextBox}" />
+
+                        <Button Content="Показать" Style="{StaticResource PrimaryButton}" Click="ShowButton_Click" Margin="0,8,0,4" />
+                        <Button Content="Очистить" Click="ClearButton_Click" Margin="0,4,0,0" />
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Column="1" Style="{StaticResource PageCard}" Padding="18">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top"
+                           Text="Найденные рецепты"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Margin="0,0,0,12" />
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="RecipesPanel" />
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,22 @@
+<UserControl x:Class="RecipeKeeper.Wpf.Views.StatisticsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border Style="{StaticResource PageCard}" Margin="0,0,16,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Популярные категории" Style="{StaticResource PageTitle}" />
+                <ItemsControl x:Name="CategoryItems" />
+            </DockPanel>
+        </Border>
+        <Border Grid.Column="1" Style="{StaticResource PageCard}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Частые ингредиенты" Style="{StaticResource PageTitle}" />
+                <ItemsControl x:Name="IngredientItems" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>
