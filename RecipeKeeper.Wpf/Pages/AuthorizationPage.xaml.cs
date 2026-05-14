@@ -7,11 +7,17 @@ namespace RecipeKeeper.Wpf.Pages;
 
 public partial class AuthorizationPage : Page
 {
+    private bool _passwordVisible;
+
     public AuthorizationPage()
     {
         InitializeComponent();
         UpdateLoginButtonState();
     }
+
+    private string CurrentPassword => _passwordVisible
+        ? PasswordTextBox.Text
+        : PasswordBox.Password;
 
     private void LoginButton_Click(object sender, RoutedEventArgs e)
     {
@@ -19,12 +25,12 @@ public partial class AuthorizationPage : Page
 
         if (!Database.UserExists(EmailTextBox.Text))
         {
-            StatusTextBlock.Text = "Такого пользователя нет. Сначала нажмите «Регистрация».";
+            StatusTextBlock.Text = "Такого пользователя нет. Сначала зарегистрируйтесь.";
             UpdateLoginButtonState();
             return;
         }
 
-        var user = Database.Login(EmailTextBox.Text, PasswordBox.Password);
+        var user = Database.Login(EmailTextBox.Text, CurrentPassword);
         if (user is null)
         {
             StatusTextBlock.Text = "Пароль неверный или аккаунт отключен.";
@@ -38,24 +44,47 @@ public partial class AuthorizationPage : Page
     {
         StatusTextBlock.Text = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(EmailTextBox.Text) || PasswordBox.Password.Length < 4)
+        if (string.IsNullOrWhiteSpace(EmailTextBox.Text) || CurrentPassword.Length < 4)
         {
-            StatusTextBlock.Text = "Введите email и пароль минимум 4 символа.";
+            StatusTextBlock.Text = "Введите логин или email и пароль минимум 4 символа.";
             return;
         }
 
-        if (!Database.Register(EmailTextBox.Text, PasswordBox.Password))
+        if (!Database.Register(EmailTextBox.Text, CurrentPassword))
         {
-            StatusTextBlock.Text = "Такой email уже зарегистрирован. Используйте кнопку «Войти».";
+            StatusTextBlock.Text = "Такой пользователь уже зарегистрирован. Используйте вход.";
             UpdateLoginButtonState();
             return;
         }
 
-        var user = Database.Login(EmailTextBox.Text, PasswordBox.Password);
+        var user = Database.Login(EmailTextBox.Text, CurrentPassword);
         if (user is not null)
         {
             OpenRecipesPage(user.Value.Id, user.Value.Email, user.Value.Role);
         }
+    }
+
+    private void TogglePasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        _passwordVisible = !_passwordVisible;
+
+        if (_passwordVisible)
+        {
+            PasswordTextBox.Text = PasswordBox.Password;
+            PasswordTextBox.Visibility = Visibility.Visible;
+            PasswordBox.Visibility = Visibility.Collapsed;
+            PasswordTextBox.Focus();
+            PasswordTextBox.CaretIndex = PasswordTextBox.Text.Length;
+        }
+        else
+        {
+            PasswordBox.Password = PasswordTextBox.Text;
+            PasswordBox.Visibility = Visibility.Visible;
+            PasswordTextBox.Visibility = Visibility.Collapsed;
+            PasswordBox.Focus();
+        }
+
+        UpdateLoginButtonState();
     }
 
     private void Input_KeyDown(object sender, KeyEventArgs e)
@@ -79,6 +108,15 @@ public partial class AuthorizationPage : Page
 
     private void Input_Changed(object sender, RoutedEventArgs e)
     {
+        if (_passwordVisible && sender == PasswordTextBox)
+        {
+            PasswordBox.Password = PasswordTextBox.Text;
+        }
+        else if (!_passwordVisible && sender == PasswordBox)
+        {
+            PasswordTextBox.Text = PasswordBox.Password;
+        }
+
         UpdateLoginButtonState();
     }
 
@@ -97,19 +135,19 @@ public partial class AuthorizationPage : Page
         }
         catch (Exception exception)
         {
-            StatusTextBlock.Text = $"Вход выполнен, но страницу рецептов открыть не удалось: {exception.Message}";
+            StatusTextBlock.Text = $"Вход выполнен, но открыть приложение не удалось: {exception.Message}";
         }
     }
 
     private void UpdateLoginButtonState()
     {
-        var emailFilled = !string.IsNullOrWhiteSpace(EmailTextBox.Text);
-        var passwordFilled = !string.IsNullOrWhiteSpace(PasswordBox.Password);
-        var userExists = emailFilled && Database.UserExists(EmailTextBox.Text);
+        var loginFilled = !string.IsNullOrWhiteSpace(EmailTextBox.Text);
+        var passwordFilled = !string.IsNullOrWhiteSpace(CurrentPassword);
+        var userExists = loginFilled && Database.UserExists(EmailTextBox.Text);
 
         LoginButton.IsEnabled = userExists && passwordFilled;
         LoginHintTextBlock.Text = userExists
             ? "Пользователь найден, можно войти."
-            : "Если email новый, используйте регистрацию.";
+            : "Новый логин? Нажмите «Зарегистрироваться».";
     }
 }

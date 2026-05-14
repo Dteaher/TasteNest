@@ -3,53 +3,184 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="Авторизация"
       Background="{StaticResource AppBackgroundBrush}">
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-        <Grid MinWidth="460" MinHeight="520">
-            <Border Style="{StaticResource PageCard}" MaxWidth="460" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <StackPanel>
-                    <TextBlock Text="Вход в TasteNest" Style="{StaticResource PageTitle}" />
+    <Page.Resources>
+        <DropShadowEffect x:Key="AuthCardShadow"
+                          BlurRadius="28"
+                          ShadowDepth="8"
+                          Direction="270"
+                          Opacity="0.12"
+                          Color="#7A6A52" />
 
-                    <TextBlock Text="Логин или email" Style="{StaticResource LabelText}" />
-                    <TextBox x:Name="EmailTextBox"
-                             TextChanged="Input_Changed"
-                             KeyDown="Input_KeyDown" />
+        <Style x:Key="AuthInputContainer" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DED8CC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="Margin" Value="0,7,0,18" />
+        </Style>
 
-                    <TextBlock Text="Пароль" Style="{StaticResource LabelText}" />
-                    <PasswordBox x:Name="PasswordBox"
-                                 PasswordChanged="Input_Changed"
+        <Style x:Key="AuthTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="15" />
+        </Style>
+
+        <Style x:Key="AuthPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="15" />
+        </Style>
+
+        <Style x:Key="AuthLinkButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDarkBrush}" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="3,0" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="430"
+                MaxWidth="430"
+                Background="#FFFFFF"
+                BorderBrush="#EEE6D8"
+                BorderThickness="1"
+                CornerRadius="14"
+                Padding="34,30"
+                Effect="{StaticResource AuthCardShadow}">
+            <StackPanel>
+                <TextBlock Text="Вход в TasteNest"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="#1F2A24"
+                           Margin="0,0,0,24" />
+
+                <TextBlock Text="Логин или email" Style="{StaticResource LabelText}" />
+                <Border Style="{StaticResource AuthInputContainer}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="@"
+                                   FontSize="18"
+                                   Foreground="#66736B"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <TextBox x:Name="EmailTextBox"
+                                 Grid.Column="1"
+                                 Style="{StaticResource AuthTextBox}"
+                                 ToolTip="Введите логин или email"
+                                 TextChanged="Input_Changed"
+                                 KeyDown="Input_KeyDown" />
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="Пароль" Style="{StaticResource LabelText}" />
+                <Border Style="{StaticResource AuthInputContainer}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="42" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="▣"
+                                   FontSize="15"
+                                   Foreground="#66736B"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+
+                        <PasswordBox x:Name="PasswordBox"
+                                     Grid.Column="1"
+                                     Style="{StaticResource AuthPasswordBox}"
+                                     ToolTip="Введите пароль"
+                                     PasswordChanged="Input_Changed"
+                                     KeyDown="Input_KeyDown" />
+
+                        <TextBox x:Name="PasswordTextBox"
+                                 Grid.Column="1"
+                                 Style="{StaticResource AuthTextBox}"
+                                 Visibility="Collapsed"
+                                 ToolTip="Введите пароль"
+                                 TextChanged="Input_Changed"
                                  KeyDown="Input_KeyDown" />
 
-                    <CheckBox x:Name="RememberMeCheckBox"
-                              Content="Запомнить вход"
-                              Margin="0,10,0,8" />
+                        <Button Grid.Column="2"
+                                Content="◉"
+                                ToolTip="Показать или скрыть пароль"
+                                MinWidth="32"
+                                MinHeight="32"
+                                Padding="0"
+                                Margin="4,0,0,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="#66736B"
+                                Click="TogglePasswordButton_Click" />
+                    </Grid>
+                </Border>
 
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="LoginButton"
-                                Content="Войти"
-                                Style="{StaticResource PrimaryButton}"
-                                Click="LoginButton_Click" />
-                        <Button Content="Регистрация"
-                                Click="RegisterButton_Click" />
-                    </StackPanel>
+                <CheckBox x:Name="RememberMeCheckBox"
+                          Content="Запомнить меня"
+                          FontSize="15"
+                          Foreground="#3F4741"
+                          Margin="0,0,0,22" />
 
-                    <TextBlock x:Name="LoginHintTextBlock"
-                               Style="{StaticResource MutedText}"
-                               Margin="0,6,0,0" />
+                <Button x:Name="LoginButton"
+                        Content="Войти"
+                        Style="{StaticResource PrimaryButton}"
+                        MinHeight="52"
+                        Margin="0,0,0,22"
+                        Click="LoginButton_Click" />
 
-                    <TextBlock x:Name="StatusTextBlock"
-                               Style="{StaticResource MutedText}"
-                               Margin="0,10,0,0" />
+                <Grid Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Height="1" Background="#E3DDD1" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1"
+                               Text="или"
+                               Foreground="#8A8278"
+                               Margin="12,0"
+                               VerticalAlignment="Center" />
+                    <Border Grid.Column="2" Height="1" Background="#E3DDD1" VerticalAlignment="Center" />
+                </Grid>
 
-                    <Border Background="#F7F5ED" CornerRadius="8" Padding="12" Margin="0,18,0,0">
-                        <StackPanel>
-                            <TextBlock Text="Стартовые аккаунты" FontWeight="Bold" />
-                            <TextBlock Text="admin / admin — администратор" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
-                            <TextBlock Text="operator / operator — оператор" Style="{StaticResource MutedText}" />
-                            <TextBlock Text="user / user — пользователь" Style="{StaticResource MutedText}" />
-                        </StackPanel>
-                    </Border>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,14">
+                    <TextBlock Text="Нет аккаунта?"
+                               Foreground="#4D5751"
+                               VerticalAlignment="Center" />
+                    <Button Content="Зарегистрироваться"
+                            Style="{StaticResource AuthLinkButton}"
+                            Click="RegisterButton_Click" />
                 </StackPanel>
-            </Border>
-        </Grid>
-    </ScrollViewer>
+
+                <TextBlock x:Name="LoginHintTextBlock"
+                           Foreground="#66736B"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           Margin="0,0,0,10" />
+
+                <TextBlock x:Name="StatusTextBlock"
+                           Foreground="#8C2B21"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </Grid>
 </Page>
