@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -7,7 +8,7 @@ namespace RecipeKeeper.Wpf.Views;
 
 public partial class RecipeDetailView : UserControl
 {
-    private const string FallbackImage = "https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=900&q=80";
+    private const string FallbackImage = "Assets/Recipes/recipe-placeholder.jpg";
     private readonly Recipe _recipe;
     public event Action? BackRequested;
 
@@ -28,16 +29,46 @@ public partial class RecipeDetailView : UserControl
         ServingsTextBlock.Text = $"{_recipe.Servings} порции";
         DifficultyTextBlock.Text = _recipe.Difficulty;
         InstructionsTextBlock.Text = _recipe.Instructions;
-        IngredientsListBox.ItemsSource = Database.GetIngredients(_recipe.Id).Select(x => $"{x.Name} — {x.Amount}");
+        IngredientsListBox.ItemsSource = Database.GetIngredients(_recipe.Id).Select(x => $"{x.Name} - {x.Amount}");
         FavoriteButton.Content = Database.IsFavorite(User.Id, _recipe.Id) ? "Убрать из избранного" : "Добавить в избранное";
+        RecipeImage.Source = LoadImage(_recipe.ImageUrl);
+    }
+
+    private static BitmapImage? LoadImage(string imagePath)
+    {
+        var resolvedPath = ResolveImagePath(string.IsNullOrWhiteSpace(imagePath) ? FallbackImage : imagePath);
+        if (resolvedPath is null)
+        {
+            return null;
+        }
+
         try
         {
-            RecipeImage.Source = new BitmapImage(new Uri(string.IsNullOrWhiteSpace(_recipe.ImageUrl) ? FallbackImage : _recipe.ImageUrl));
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.UriSource = resolvedPath;
+            image.EndInit();
+            image.Freeze();
+            return image;
         }
         catch
         {
-            RecipeImage.Source = null;
+            return imagePath == FallbackImage ? null : LoadImage(FallbackImage);
         }
+    }
+
+    private static Uri? ResolveImagePath(string imagePath)
+    {
+        if (Uri.TryCreate(imagePath, UriKind.Absolute, out var absoluteUri))
+        {
+            return absoluteUri;
+        }
+
+        var localPath = Path.Combine(AppContext.BaseDirectory, imagePath.Replace('/', Path.DirectorySeparatorChar));
+        return File.Exists(localPath)
+            ? new Uri(localPath, UriKind.Absolute)
+            : null;
     }
 
     private void FavoriteButton_Click(object sender, RoutedEventArgs e)
@@ -47,5 +78,6 @@ public partial class RecipeDetailView : UserControl
     }
 
     private void CookButton_Click(object sender, RoutedEventArgs e) => Database.IncrementCookCount(_recipe.Id);
+
     private void BackButton_Click(object sender, RoutedEventArgs e) => BackRequested?.Invoke();
 }

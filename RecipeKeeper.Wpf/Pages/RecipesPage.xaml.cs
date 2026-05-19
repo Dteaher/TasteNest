@@ -42,7 +42,7 @@ public partial class RecipesPage : Page
             "Stats" => new StatisticsView(),
             "AdminPanel" => new AdminPanelView(),
             "OperatorPanel" => new OperatorPanelView(),
-            _ => Wire(new FavoritesView())
+            _ => Wire(new SearchView())
         };
     }
 
@@ -52,6 +52,7 @@ public partial class RecipesPage : Page
         {
             NavigationPanel.Children.Add(new Button
             {
+                Style = (Style)FindResource("NavigationButton"),
                 Content = "Админ-панель",
                 Tag = "AdminPanel"
             });
@@ -60,6 +61,7 @@ public partial class RecipesPage : Page
         {
             NavigationPanel.Children.Add(new Button
             {
+                Style = (Style)FindResource("NavigationButton"),
                 Content = "Оператор",
                 Tag = "OperatorPanel"
             });

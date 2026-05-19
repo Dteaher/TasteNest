@@ -24,7 +24,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     </Style>
 
     <Style TargetType="PasswordBox">
@@ -240,7 +240,7 @@
                                 CornerRadius="10"
                                 Padding="10"
                                 Margin="0,0,0,16">
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                           VerticalScrollBarVisibility="Disabled"
                                           CanContentScroll="False">
                                 <TabPanel x:Name="HeaderPanel"
@@ -331,7 +331,7 @@
         <Setter Property="RowHeight" Value="58" />
         <Setter Property="MinHeight" Value="280" />
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
-        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     </Style>
 
     <Style x:Key="InsightCard" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
@@ -386,8 +386,41 @@
 
     <Style x:Key="PageScrollViewer" TargetType="ScrollViewer">
         <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-        <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
         <Setter Property="CanContentScroll" Value="False" />
-        <Setter Property="PanningMode" Value="Both" />
+        <Setter Property="PanningMode" Value="VerticalOnly" />
+    </Style>
+
+    <Style x:Key="ResponsiveCard" TargetType="Border" BasedOn="{StaticResource PageCard}">
+        <Setter Property="Padding" Value="18" />
+        <Setter Property="Margin" Value="0,0,0,14" />
+        <Setter Property="MinWidth" Value="0" />
+    </Style>
+
+    <Style x:Key="RecipeCard" TargetType="Border" BasedOn="{StaticResource PageCard}">
+        <Setter Property="Padding" Value="14" />
+        <Setter Property="Margin" Value="0,0,12,12" />
+        <Setter Property="MinWidth" Value="260" />
+        <Setter Property="MaxWidth" Value="420" />
+    </Style>
+
+    <Style x:Key="StatCard" TargetType="Border" BasedOn="{StaticResource PageCard}">
+        <Setter Property="Padding" Value="18" />
+        <Setter Property="Margin" Value="0,0,12,12" />
+        <Setter Property="MinHeight" Value="104" />
+        <Setter Property="MinWidth" Value="190" />
+    </Style>
+
+    <Style x:Key="ProgressBarStat" TargetType="ProgressBar">
+        <Setter Property="Height" Value="9" />
+        <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Background" Value="#E8E2D6" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style x:Key="EmptyState" TargetType="Border" BasedOn="{StaticResource PageCard}">
+        <Setter Property="Padding" Value="28" />
+        <Setter Property="MinHeight" Value="180" />
+        <Setter Property="Background" Value="#FBFAF6" />
     </Style>
 </ResourceDictionary>

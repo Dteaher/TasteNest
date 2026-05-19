@@ -2,9 +2,6 @@ using Microsoft.Data.SqlClient;
 
 namespace RecipeKeeper.Wpf.Data;
 
-/// <summary>
-/// Объект подключения по образцу из методички: C# обращается к SQL Server через SqlConnection.
-/// </summary>
 public sealed class ConnectObject : IDisposable
 {
     public SqlConnection? Connection { get; private set; }

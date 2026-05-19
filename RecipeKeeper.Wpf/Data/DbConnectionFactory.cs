@@ -2,10 +2,6 @@ using Microsoft.Data.SqlClient;
 
 namespace RecipeKeeper.Wpf.Data;
 
-/// <summary>
-/// Подключение к SQL Server читается из TasteNest.settings.json рядом с exe.
-/// На компьютере-сервере приложение может создать базу и SQL-логин для клиентских устройств.
-/// </summary>
 public static class DbConnectionFactory
 {
     private static bool _databaseChecked;

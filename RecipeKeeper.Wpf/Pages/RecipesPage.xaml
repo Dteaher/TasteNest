@@ -5,34 +5,37 @@
       Background="{StaticResource AppBackgroundBrush}">
     <Page.Resources>
         <Style x:Key="NavigationButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="MinHeight" Value="40" />
-            <Setter Property="MinWidth" Value="112" />
-            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="MinWidth" Value="132" />
+            <Setter Property="Padding" Value="16,7" />
             <Setter Property="Margin" Value="0,0,8,8" />
             <Setter Property="FontSize" Value="14" />
         </Style>
     </Page.Resources>
 
-    <Grid Margin="18,14">
+    <Grid Margin="22,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border Style="{StaticResource PageCard}" Padding="12,10,4,2" Margin="0,0,0,12">
+        <Border Style="{StaticResource PageCard}" Padding="12,10,4,2" Margin="0,0,0,14">
             <WrapPanel x:Name="NavigationPanel">
-                <Button Style="{StaticResource NavigationButton}" Content="Поиск рецептов" Tag="Search" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="Мои продукты" Tag="Products" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="Добавить рецепт" Tag="AddRecipe" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="Профиль" Tag="Profile" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="Избранное" Tag="Favorites" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="План питания" Tag="MealPlan" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="Список покупок" Tag="Shopping" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="Популярные" Tag="Popular" Click="NavigationButton_Click" />
-                <Button Style="{StaticResource NavigationButton}" Content="Статистика" Tag="Stats" Click="NavigationButton_Click" />
-            </WrapPanel>
+                    <Button Style="{StaticResource NavigationButton}" Content="Поиск рецептов" Tag="Search" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="Мои продукты" Tag="Products" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="Добавить рецепт" Tag="AddRecipe" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="Профиль" Tag="Profile" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="Избранное" Tag="Favorites" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="План питания" Tag="MealPlan" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="Список покупок" Tag="Shopping" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="Популярные" Tag="Popular" Click="NavigationButton_Click" />
+                    <Button Style="{StaticResource NavigationButton}" Content="Статистика" Tag="Stats" Click="NavigationButton_Click" />
+                </WrapPanel>
         </Border>
 
-        <ContentControl x:Name="WorkspaceContent" Grid.Row="1" />
+        <ScrollViewer Grid.Row="1" Style="{StaticResource PageScrollViewer}">
+            <ContentControl x:Name="WorkspaceContent" />
+        </ScrollViewer>
     </Grid>
 </Page>
+

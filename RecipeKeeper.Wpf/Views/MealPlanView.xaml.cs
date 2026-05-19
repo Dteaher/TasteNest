@@ -18,7 +18,7 @@ public partial class MealPlanView : UserControl
         MealComboBox.SelectedIndex = 0;
         _recipes = Database.SearchRecipes("", null, Array.Empty<string>());
         RecipeComboBox.ItemsSource = _recipes;
-        RecipeComboBox.SelectedIndex = 0;
+        RecipeComboBox.SelectedIndex = _recipes.Count > 0 ? 0 : -1;
         Refresh();
     }
 

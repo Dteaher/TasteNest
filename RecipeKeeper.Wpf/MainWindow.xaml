@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="TasteNest" Height="780" Width="1240"
-        MinHeight="560" MinWidth="680"
+        MinHeight="560" MinWidth="760"
         WindowStartupLocation="CenterScreen"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
@@ -14,8 +14,11 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{StaticResource HeaderBrush}">
-            <Grid Margin="20,10">
+        <Border Grid.Row="0"
+                Background="{StaticResource HeaderBrush}"
+                BorderBrush="{StaticResource BorderBrushSoft}"
+                BorderThickness="0,0,0,1">
+            <Grid Margin="22,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -25,19 +28,22 @@
                 <Image Grid.Column="0"
                        Source="Assets/TasteNestLogo.png"
                        Height="58"
-                       Width="310"
+                       Width="300"
                        Stretch="Uniform"
                        HorizontalAlignment="Left"
                        VerticalAlignment="Center"
                        Margin="0,0,18,0" />
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
                     <TextBlock x:Name="UserTextBlock"
                                VerticalAlignment="Center"
                                Foreground="#596057"
                                FontWeight="SemiBold"
                                TextTrimming="CharacterEllipsis"
-                               MaxWidth="360"
+                               MaxWidth="320"
                                Margin="0,0,12,0" />
                     <Button x:Name="SignOutButton"
                             Content="Выйти"

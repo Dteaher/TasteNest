@@ -6,8 +6,9 @@
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
                 <TextBlock Text="Популярные рецепты" Style="{StaticResource PageTitle}" />
             </StackPanel>
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <WrapPanel x:Name="RecipesPanel" />
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="RecipesPanel" />
             </ScrollViewer>
         </DockPanel>
     </Border>

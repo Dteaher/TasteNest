@@ -25,9 +25,10 @@
                 <TextBlock DockPanel.Dock="Top" Text="План на неделю" Style="{StaticResource PageTitle}" />
                 <ListBox x:Name="PlanListBox"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          MouseDoubleClick="PlanListBox_MouseDoubleClick" />
             </DockPanel>
         </Border>
     </Grid>
 </UserControl>
+

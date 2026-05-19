@@ -8,52 +8,77 @@ namespace RecipeKeeper.Wpf.Pages;
 public partial class AuthorizationPage : Page
 {
     private bool _passwordVisible;
+    private bool _isRegisterMode;
 
     public AuthorizationPage()
     {
         InitializeComponent();
-        UpdateLoginButtonState();
+        UpdateMode();
+        UpdatePrimaryButtonState();
     }
 
     private string CurrentPassword => _passwordVisible
         ? PasswordTextBox.Text
         : PasswordBox.Password;
 
-    private void LoginButton_Click(object sender, RoutedEventArgs e)
+    private void PrimaryActionButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isRegisterMode)
+        {
+            RegisterAndLogin();
+            return;
+        }
+
+        Login();
+    }
+
+    private void Login()
     {
         StatusTextBlock.Text = string.Empty;
 
         if (!Database.UserExists(EmailTextBox.Text))
         {
             StatusTextBlock.Text = "Такого пользователя нет. Сначала зарегистрируйтесь.";
-            UpdateLoginButtonState();
+            UpdatePrimaryButtonState();
             return;
         }
 
         var user = Database.Login(EmailTextBox.Text, CurrentPassword);
         if (user is null)
         {
-            StatusTextBlock.Text = "Пароль неверный или аккаунт отключен.";
+            StatusTextBlock.Text = "Пароль неверный или аккаунт отключён.";
             return;
         }
 
         OpenRecipesPage(user.Value.Id, user.Value.Email, user.Value.Role);
     }
 
-    private void RegisterButton_Click(object sender, RoutedEventArgs e)
+    private void RegisterAndLogin()
     {
         StatusTextBlock.Text = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(EmailTextBox.Text) || CurrentPassword.Length < 4)
+        if (string.IsNullOrWhiteSpace(EmailTextBox.Text))
         {
-            StatusTextBlock.Text = "Введите логин или email и пароль минимум 4 символа.";
+            StatusTextBlock.Text = "Введите логин или email.";
+            return;
+        }
+
+        if (CurrentPassword.Length < 4)
+        {
+            StatusTextBlock.Text = "Пароль должен быть минимум 4 символа.";
+            return;
+        }
+
+        if (CurrentPassword != ConfirmPasswordBox.Password)
+        {
+            StatusTextBlock.Text = "Пароли не совпадают.";
             return;
         }
 
         if (!Database.Register(EmailTextBox.Text, CurrentPassword))
         {
             StatusTextBlock.Text = "Такой пользователь уже зарегистрирован. Используйте вход.";
-            UpdateLoginButtonState();
+            UpdatePrimaryButtonState();
             return;
         }
 
@@ -62,6 +87,23 @@ public partial class AuthorizationPage : Page
         {
             OpenRecipesPage(user.Value.Id, user.Value.Email, user.Value.Role);
         }
+    }
+
+    private void ModeToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        _isRegisterMode = !_isRegisterMode;
+        StatusTextBlock.Text = string.Empty;
+        UpdateMode();
+        UpdatePrimaryButtonState();
+    }
+
+    private void UpdateMode()
+    {
+        TitleTextBlock.Text = _isRegisterMode ? "Регистрация в TasteNest" : "Вход в TasteNest";
+        PrimaryActionButton.Content = _isRegisterMode ? "Зарегистрироваться" : "Войти";
+        ConfirmPasswordPanel.Visibility = _isRegisterMode ? Visibility.Visible : Visibility.Collapsed;
+        ModePromptTextBlock.Text = _isRegisterMode ? "Уже есть аккаунт?" : "Нет аккаунта?";
+        ModeToggleButton.Content = _isRegisterMode ? "Войти" : "Зарегистрироваться";
     }
 
     private void TogglePasswordButton_Click(object sender, RoutedEventArgs e)
@@ -84,7 +126,7 @@ public partial class AuthorizationPage : Page
             PasswordBox.Focus();
         }
 
-        UpdateLoginButtonState();
+        UpdatePrimaryButtonState();
     }
 
     private void Input_KeyDown(object sender, KeyEventArgs e)
@@ -96,13 +138,9 @@ public partial class AuthorizationPage : Page
 
         e.Handled = true;
 
-        if (LoginButton.IsEnabled)
+        if (PrimaryActionButton.IsEnabled)
         {
-            LoginButton_Click(sender, e);
-        }
-        else
-        {
-            RegisterButton_Click(sender, e);
+            PrimaryActionButton_Click(sender, e);
         }
     }
 
@@ -117,7 +155,7 @@ public partial class AuthorizationPage : Page
             PasswordTextBox.Text = PasswordBox.Password;
         }
 
-        UpdateLoginButtonState();
+        UpdatePrimaryButtonState();
     }
 
     private void OpenRecipesPage(int id, string email, string role)
@@ -139,15 +177,27 @@ public partial class AuthorizationPage : Page
         }
     }
 
-    private void UpdateLoginButtonState()
+    private void UpdatePrimaryButtonState()
     {
-        var loginFilled = !string.IsNullOrWhiteSpace(EmailTextBox.Text);
+        var login = EmailTextBox.Text.Trim();
+        var loginFilled = login.Length > 0;
         var passwordFilled = !string.IsNullOrWhiteSpace(CurrentPassword);
-        var userExists = loginFilled && Database.UserExists(EmailTextBox.Text);
+        var userExists = loginFilled && Database.UserExists(login);
 
-        LoginButton.IsEnabled = userExists && passwordFilled;
+        if (_isRegisterMode)
+        {
+            var passwordIsValid = CurrentPassword.Length >= 4;
+            var passwordsMatch = CurrentPassword == ConfirmPasswordBox.Password;
+            PrimaryActionButton.IsEnabled = loginFilled && passwordIsValid && passwordsMatch && !userExists;
+            LoginHintTextBlock.Text = userExists
+                ? "Такой пользователь уже есть. Переключитесь на вход."
+                : "Заполните логин, пароль и повтор пароля.";
+            return;
+        }
+
+        PrimaryActionButton.IsEnabled = userExists && passwordFilled;
         LoginHintTextBlock.Text = userExists
             ? "Пользователь найден, можно войти."
-            : "Новый логин? Нажмите «Зарегистрироваться».";
+            : "Новый логин? Переключитесь на регистрацию.";
     }
 }

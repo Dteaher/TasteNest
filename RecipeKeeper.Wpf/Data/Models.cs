@@ -1,4 +1,4 @@
-    namespace RecipeKeeper.Wpf.Data;
+﻿    namespace RecipeKeeper.Wpf.Data;
 
 public sealed record Category(int Id, string Name);
 public sealed record Recipe(int Id, string Title, string Description, string Instructions, int CookingTime, int Servings, string Category, string ImageUrl = "", string Difficulty = "Лёгкий");
@@ -11,3 +11,5 @@ public sealed record ProfileSummary(int RecipesCount, int FavoritesCount, int Vi
 public sealed record ManagedUser(int Id, string Email, string Role, bool IsActive, int RecipesCount, int FavoritesCount, int ViewsCount, int ProductsCount);
 public sealed record OperatorQueueItem(int UserId, string Email, string Issue, string Priority, string Detail, bool CanBlock);
 public sealed record AdminSystemSummary(int TotalUsers, int Admins, int Operators, int Users, int BlockedUsers, int Recipes, int Products, int Favorites);
+public sealed record StatisticsSummary(int RecipesCount, int FavoritesCount, int ProductsCount, int CookCount);
+public sealed record RecipePopularityStat(string Title, int CookCount, int Rating);

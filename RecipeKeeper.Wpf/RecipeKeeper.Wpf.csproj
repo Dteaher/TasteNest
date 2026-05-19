@@ -19,6 +19,9 @@
     <Resource Include="Assets\TasteNestIcon.png" />
     <Resource Include="Assets\TasteNestLogo.png" />
     <Resource Include="Assets\TasteNestFullLogo.png" />
+    <Content Include="Assets\Recipes\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

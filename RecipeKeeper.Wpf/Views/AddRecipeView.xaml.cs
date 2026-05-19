@@ -22,12 +22,25 @@ public partial class AddRecipeView : UserControl
             StatusTextBlock.Text = "Заполните название и категорию.";
             return;
         }
+
         if (!int.TryParse(TimeTextBox.Text, out var time) || !int.TryParse(ServingsTextBox.Text, out var servings))
         {
             StatusTextBlock.Text = "Время и порции должны быть числами.";
             return;
         }
-        Database.AddRecipeExtended(User.Id, TitleTextBox.Text, DescriptionTextBox.Text, InstructionsTextBox.Text, time, servings, category.Id, DifficultyComboBox.Text, ImageTextBox.Text, IngredientsTextBox.Text);
+
+        Database.AddRecipeExtended(
+            User.Id,
+            TitleTextBox.Text,
+            DescriptionTextBox.Text,
+            InstructionsTextBox.Text,
+            time,
+            servings,
+            category.Id,
+            DifficultyComboBox.Text,
+            ImageTextBox.Text,
+            IngredientsTextBox.Text);
+
         StatusTextBlock.Text = "Рецепт сохранён.";
         Clear();
     }
@@ -40,7 +53,7 @@ public partial class AddRecipeView : UserControl
         DescriptionTextBox.Clear();
         InstructionsTextBox.Clear();
         ImageTextBox.Clear();
-        IngredientsTextBox.Text = "";
+        IngredientsTextBox.Text = string.Empty;
         TimeTextBox.Text = "30";
         ServingsTextBox.Text = "2";
     }
