@@ -42,7 +42,7 @@ public partial class MealPlanView : UserControl
         }
     }
 
-    private void ShoppingButton_Click(object sender, RoutedEventArgs e) => Database.GenerateShoppingFromFavorites(User.Id);
+    private void ShoppingButton_Click(object sender, RoutedEventArgs e) => Database.GenerateShoppingFromMealPlan(User.Id);
 
     private void PlanListBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {

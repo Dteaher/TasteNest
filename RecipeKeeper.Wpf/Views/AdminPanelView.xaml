@@ -70,10 +70,10 @@
                         </StackPanel>
 
                         <DataGrid x:Name="UsersGrid"
+                                  Style="{StaticResource StyledDataGrid}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   MinHeight="440"
-                                  HorizontalScrollBarVisibility="Disabled"
                                   SelectionChanged="UsersGrid_SelectionChanged">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60" />
@@ -90,6 +90,43 @@
                 </Border>
 
                 <StackPanel Grid.Column="1">
+                    <Border Style="{StaticResource PageCard}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Общая статистика" FontSize="20" FontWeight="Bold" />
+                            <TextBlock Text="Сводка по всему TasteNest для администратора."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,6,0,14" />
+
+                            <UniformGrid Columns="2">
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Рецепты" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalRecipesText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Продукты" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalProductsText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Просмотры" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalViewsText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Приготовлено" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalCookText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
                     <Border Style="{StaticResource PageCard}" Margin="0,0,0,16">
                         <StackPanel>
                             <TextBlock Text="Управление ролью" Style="{StaticResource PageTitle}" />

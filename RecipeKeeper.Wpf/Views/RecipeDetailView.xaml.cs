@@ -77,7 +77,7 @@ public partial class RecipeDetailView : UserControl
         Render();
     }
 
-    private void CookButton_Click(object sender, RoutedEventArgs e) => Database.IncrementCookCount(_recipe.Id);
+    private void CookButton_Click(object sender, RoutedEventArgs e) => Database.IncrementCookCount(User.Id, _recipe.Id);
 
     private void BackButton_Click(object sender, RoutedEventArgs e) => BackRequested?.Invoke();
 }

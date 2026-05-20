@@ -3,39 +3,37 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="TasteNest"
       Background="{StaticResource AppBackgroundBrush}">
-    <Page.Resources>
-        <Style x:Key="NavigationButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="MinHeight" Value="42" />
-            <Setter Property="MinWidth" Value="132" />
-            <Setter Property="Padding" Value="16,7" />
-            <Setter Property="Margin" Value="0,0,8,8" />
-            <Setter Property="FontSize" Value="14" />
-        </Style>
-    </Page.Resources>
-
-    <Grid Margin="22,16">
+    <Grid Style="{StaticResource PageShell}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border Style="{StaticResource PageCard}" Padding="12,10,4,2" Margin="0,0,0,14">
-            <WrapPanel x:Name="NavigationPanel">
-                    <Button Style="{StaticResource NavigationButton}" Content="Поиск рецептов" Tag="Search" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="Мои продукты" Tag="Products" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="Добавить рецепт" Tag="AddRecipe" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="Профиль" Tag="Profile" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="Избранное" Tag="Favorites" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="План питания" Tag="MealPlan" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="Список покупок" Tag="Shopping" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="Популярные" Tag="Popular" Click="NavigationButton_Click" />
-                    <Button Style="{StaticResource NavigationButton}" Content="Статистика" Tag="Stats" Click="NavigationButton_Click" />
-                </WrapPanel>
+        <Border Background="White"
+                BorderBrush="{StaticResource BorderBrushSoft}"
+                BorderThickness="1"
+                CornerRadius="18"
+                Padding="14,14,4,4"
+                Margin="0,0,0,18">
+            <Border.Effect>
+                <DropShadowEffect Color="#D8CEC0" BlurRadius="16" ShadowDepth="2" Opacity="0.18" />
+            </Border.Effect>
+            <UniformGrid x:Name="NavigationPanel"
+                         Rows="1"
+                         SizeChanged="NavigationPanel_SizeChanged">
+                <Button Style="{StaticResource NavigationButton}" Content="🔍  Поиск рецептов" Tag="Search" Click="NavigationButton_Click" />
+                <Button Style="{StaticResource NavigationButton}" Content="🔥  Популярные" Tag="Popular" Click="NavigationButton_Click" />
+                <Button Style="{StaticResource NavigationButton}" Content="🧺  Мои продукты" Tag="Products" Click="NavigationButton_Click" />
+                <Button Style="{StaticResource NavigationButton}" Content="🛒  Список покупок" Tag="Shopping" Click="NavigationButton_Click" />
+                <Button Style="{StaticResource NavigationButton}" Content="📅  План питания" Tag="MealPlan" Click="NavigationButton_Click" />
+            </UniformGrid>
         </Border>
 
-        <ScrollViewer Grid.Row="1" Style="{StaticResource PageScrollViewer}">
-            <ContentControl x:Name="WorkspaceContent" />
-        </ScrollViewer>
+        <ContentControl x:Name="WorkspaceContent"
+                        Grid.Row="1"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" />
     </Grid>
 </Page>
-

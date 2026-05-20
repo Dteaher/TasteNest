@@ -1,9 +1,14 @@
 <Page x:Class="RecipeKeeper.Wpf.Pages.RecipeFormPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="clr-namespace:RecipeKeeper.Wpf.Ui"
       Title="Добавить рецепт"
       Background="{StaticResource AppBackgroundBrush}">
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                  HorizontalScrollBarVisibility="Disabled"
+                  CanContentScroll="False"
+                  PanningMode="VerticalOnly"
+                  ui:MouseWheelScroll.ForwardNestedWheel="True">
         <Border Style="{StaticResource PageCard}">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -45,10 +50,10 @@
                 <TextBlock Grid.Row="6" Text="Приготовление" Style="{StaticResource LabelText}" />
                 <TextBox x:Name="InstructionsTextBox" Grid.Row="6" Grid.Column="1" Height="140" TextWrapping="Wrap" AcceptsReturn="True" />
 
-                <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal">
+                <UniformGrid Grid.Row="7" Grid.Column="1" Columns="2">
                     <Button Content="Сохранить" Style="{StaticResource PrimaryButton}" Click="SaveButton_Click" />
-                    <Button Content="Назад" Click="BackButton_Click" />
-                </StackPanel>
+                    <Button Content="Назад" Style="{StaticResource SecondaryButton}" Click="BackButton_Click" />
+                </UniformGrid>
             </Grid>
         </Border>
     </ScrollViewer>

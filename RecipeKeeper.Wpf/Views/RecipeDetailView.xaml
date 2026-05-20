@@ -1,7 +1,12 @@
 <UserControl x:Class="RecipeKeeper.Wpf.Views.RecipeDetailView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:RecipeKeeper.Wpf.Ui">
+    <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                  HorizontalScrollBarVisibility="Disabled"
+                  CanContentScroll="False"
+                  PanningMode="VerticalOnly"
+                  ui:MouseWheelScroll.ForwardNestedWheel="True">
         <StackPanel>
             <Border Style="{StaticResource PageCard}" Margin="0,0,0,16">
                 <Grid>

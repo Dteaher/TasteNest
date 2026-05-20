@@ -1,11 +1,9 @@
-param(
+﻿param(
     [string]$DatabaseName = "RecipeKeeperDb",
     [string]$LoginName = "tastenest_app",
     [string]$LoginPassword = ""
 )
 
-# Run this file on the server computer as Administrator.
-# It enables SQL Server Express network access and creates the TasteNest client SQL login.
 
 $ErrorActionPreference = "Stop"
 

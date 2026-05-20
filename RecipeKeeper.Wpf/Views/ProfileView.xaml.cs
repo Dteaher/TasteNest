@@ -21,6 +21,9 @@ public partial class ProfileView : UserControl
     private void RenderProfile()
     {
         UserTextBlock.Text = User.Email;
+        OperatorPanelQuickButton.Visibility = User.Role == "Operator"
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         RoleTextBlock.Text = $"Роль: {User.Role}";
 
         var summary = Database.GetProfileSummary(User.Id);
@@ -30,6 +33,9 @@ public partial class ProfileView : UserControl
         ProductsCountText.Text = summary.ProductsCount.ToString();
 
         var history = Database.GetRecipeViews(User.Id);
+        ActivityCountText.Text = history.Count == 0
+            ? "0 записей"
+            : $"{history.Count} записей";
         HistoryListBox.ItemsSource = history.Count == 0
             ? new[] { new RecipeActivity("Вы пока не открывали рецепты", DateTime.Now) }
             : history;

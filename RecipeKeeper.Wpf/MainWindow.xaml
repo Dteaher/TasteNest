@@ -8,6 +8,101 @@
         SnapsToDevicePixels="True"
         Icon="Assets/TasteNest.ico"
         Background="{StaticResource AppBackgroundBrush}">
+    <Window.Resources>
+        <Style x:Key="ProfileHeaderButton" TargetType="Button">
+            <Setter Property="Width" Value="204" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="14">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#EAF3EC" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#DDEBE2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ProfilePopupButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#EAF3EC" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#DDEBE2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ProfilePopupDangerButton" TargetType="Button" BasedOn="{StaticResource ProfilePopupButton}">
+            <Setter Property="Foreground" Value="#C94C4C" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#FDECEC" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#F8DADA" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,45 +110,224 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
+                Height="94"
                 Background="{StaticResource HeaderBrush}"
                 BorderBrush="{StaticResource BorderBrushSoft}"
                 BorderThickness="0,0,0,1">
-            <Grid Margin="22,10">
+            <Grid Margin="28,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Image Grid.Column="0"
-                       Source="Assets/TasteNestLogo.png"
-                       Height="58"
-                       Width="300"
-                       Stretch="Uniform"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Center"
-                       Margin="0,0,18,0" />
-
-                <StackPanel Grid.Column="2"
+                <StackPanel Grid.Column="0"
                             Orientation="Horizontal"
                             VerticalAlignment="Center"
-                            HorizontalAlignment="Right">
-                    <TextBlock x:Name="UserTextBlock"
+                            Margin="0,0,24,0">
+                    <Image Source="Assets/TasteNestIcon.png"
+                           Height="52"
+                           Width="52"
+                           Stretch="Uniform"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,0" />
+                    <TextBlock Text="TasteNest"
+                               FontSize="34"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource AccentBrush}"
                                VerticalAlignment="Center"
-                               Foreground="#596057"
-                               FontWeight="SemiBold"
-                               TextTrimming="CharacterEllipsis"
-                               MaxWidth="320"
-                               Margin="0,0,12,0" />
-                    <Button x:Name="SignOutButton"
-                            Content="Выйти"
-                            MinWidth="86"
-                            MinHeight="34"
-                            Padding="12,5"
-                            Margin="0"
-                            Visibility="Collapsed"
-                            Click="SignOutButton_Click" />
+                               TextTrimming="CharacterEllipsis" />
                 </StackPanel>
+
+                <Border x:Name="HeaderSearchContainer"
+                        Grid.Column="1"
+                        MaxWidth="700"
+                        Height="48"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        Background="White"
+                        BorderBrush="{StaticResource BorderBrushSoft}"
+                        BorderThickness="1"
+                        CornerRadius="14"
+                        Padding="12,0"
+                        Margin="8,0,16,0"
+                        Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="&#x1F50D;"
+                                Style="{StaticResource IconButton}"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Width="30"
+                                MinWidth="30"
+                                Height="30"
+                                MinHeight="30"
+                                Margin="0,0,8,0"
+                                Click="HeaderSearchButton_Click"
+                                ToolTip="Найти" />
+                        <TextBox x:Name="HeaderSearchTextBox"
+                                 Grid.Column="1"
+                                 Style="{StaticResource AppTextBox}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 Margin="0"
+                                 MinHeight="0"
+                                 FontSize="15"
+                                 Tag="Поиск рецептов, ингредиентов, тегов..."
+                                 TextChanged="HeaderSearchTextBox_TextChanged"
+                                 KeyDown="HeaderSearchTextBox_KeyDown" />
+                    </Grid>
+                </Border>
+
+                <Button x:Name="ProfileMenuButton"
+                        Grid.Column="2"
+                        Margin="0"
+                        Click="ProfileMenuButton_Click"
+                        Style="{StaticResource ProfileHeaderButton}"
+                        Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="34"
+                                Height="34"
+                                CornerRadius="17"
+                                Background="{StaticResource AccentBrush}"
+                                Margin="0,0,10,0">
+                            <TextBlock x:Name="HeaderAvatarText"
+                                       Text="?"
+                                       FontSize="15"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1"
+                                    VerticalAlignment="Center">
+                            <TextBlock x:Name="UserTextBlock"
+                                       Foreground="{StaticResource TextBrush}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       LineHeight="16"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="UserRoleTextBlock"
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       FontSize="12"
+                                       LineHeight="14"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2"
+                                   Text="&#x2304;"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,0,0" />
+                    </Grid>
+                </Button>
+
+                <Popup x:Name="ProfilePopup"
+                       PlacementTarget="{Binding ElementName=ProfileMenuButton}"
+                       Placement="Bottom"
+                       HorizontalOffset="-48"
+                       VerticalOffset="8"
+                       AllowsTransparency="True"
+                       StaysOpen="False"
+                       PopupAnimation="Fade">
+                    <Border Width="252"
+                            Background="White"
+                            BorderBrush="{StaticResource BorderBrushSoft}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="12">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#D8CEC0"
+                                              BlurRadius="20"
+                                              ShadowDepth="4"
+                                              Opacity="0.18" />
+                        </Border.Effect>
+                        <StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="38"
+                                        Height="38"
+                                        CornerRadius="19"
+                                        Background="{StaticResource AccentBrush}"
+                                        Margin="0,0,10,0">
+                                    <TextBlock x:Name="PopupAvatarText"
+                                               Text="?"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock x:Name="PopupUserNameText"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource TextBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock x:Name="PopupUserRoleText"
+                                               FontSize="12"
+                                               Foreground="{StaticResource MutedTextBrush}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Height="1" Background="{StaticResource BorderBrushSoft}" Margin="0,0,0,8" />
+
+                            <Button Style="{StaticResource ProfilePopupButton}"
+                                    Click="OpenProfileButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#x1F464;" Width="22" Margin="0,0,8,0" />
+                                    <TextBlock Text="Открыть профиль" Foreground="{StaticResource TextBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource ProfilePopupButton}"
+                                    Click="StatisticsButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#x1F4CA;" Width="22" Margin="0,0,8,0" />
+                                    <TextBlock Text="Статистика" Foreground="{StaticResource TextBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="AdminPanelButton"
+                                    Style="{StaticResource ProfilePopupButton}"
+                                    Click="AdminPanelButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#x1F6E1;" Width="22" Margin="0,0,8,0" />
+                                    <TextBlock Text="Админ-панель" Foreground="{StaticResource TextBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="OperatorPanelButton"
+                                    Style="{StaticResource ProfilePopupButton}"
+                                    Click="OperatorPanelButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#x1F6E0;" Width="22" Margin="0,0,8,0" />
+                                    <TextBlock Text="Панель оператора" Foreground="{StaticResource TextBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource ProfilePopupDangerButton}"
+                                    Click="SignOutButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#x238B;" Width="22" Foreground="#C94C4C" Margin="0,0,8,0" />
+                                    <TextBlock Text="Выйти" Foreground="#C94C4C" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Popup>
             </Grid>
         </Border>
 

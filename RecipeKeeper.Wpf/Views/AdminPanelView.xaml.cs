@@ -26,6 +26,10 @@ public partial class AdminPanelView : UserControl
         RolesSummaryText.Text = $"Admin {summary.Admins} · Operator {summary.Operators} · User {summary.Users}";
         ContentSummaryText.Text = $"Рецепты {summary.Recipes} · Продукты {summary.Products} · Избранное {summary.Favorites}";
         BlockedUsersText.Text = summary.BlockedUsers.ToString();
+        GlobalRecipesText.Text = summary.Recipes.ToString();
+        GlobalProductsText.Text = summary.Products.ToString();
+        GlobalViewsText.Text = summary.Views.ToString();
+        GlobalCookText.Text = summary.CookCount.ToString();
         UpdateSelectedState(null);
     }
 

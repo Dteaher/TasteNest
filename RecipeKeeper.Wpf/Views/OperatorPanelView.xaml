@@ -17,12 +17,20 @@
 
                     <StackPanel>
                         <TextBlock Text="Рабочее место оператора" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Оператор работает не с ролями, а с поддержкой: видит очередь ситуаций и помогает обычным пользователям."
-                                   Style="{StaticResource MutedText}" />
+                        <TextBlock Text="Оператор видит очередь пользовательских ситуаций, помогает обычным пользователям и может блокировать или разблокировать только аккаунты User."
+                                   Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
 
-                    <Border Grid.Column="1" Background="#EEF4F7" CornerRadius="14" Padding="16,10" VerticalAlignment="Center">
-                        <TextBlock Text="Operator · поддержка пользователей" Foreground="#285C73" FontWeight="Bold" />
+                    <Border Grid.Column="1"
+                            Background="#EEF4F7"
+                            CornerRadius="14"
+                            Padding="16,10"
+                            VerticalAlignment="Center"
+                            Margin="18,0,0,0">
+                        <TextBlock Text="Operator · поддержка пользователей"
+                                   Foreground="#285C73"
+                                   FontWeight="Bold" />
                     </Border>
                 </Grid>
             </Border>
@@ -53,7 +61,7 @@
                                 </Border>
                                 <Border Style="{StaticResource SummaryCard}">
                                     <StackPanel>
-                                        <TextBlock Text="Очередь" Style="{StaticResource MutedText}" />
+                                        <TextBlock Text="В очереди" Style="{StaticResource MutedText}" />
                                         <TextBlock x:Name="ActionUsersText" FontSize="26" FontWeight="Bold" />
                                     </StackPanel>
                                 </Border>
@@ -64,9 +72,9 @@
                     <Border Style="{StaticResource PageCard}" Margin="0,0,16,0">
                         <StackPanel>
                             <TextBlock Text="Что делает оператор" FontSize="20" FontWeight="Bold" />
-                            <TextBlock Text="1. Проверяет очередь ситуаций." Style="{StaticResource MutedText}" Margin="0,8,0,0" />
-                            <TextBlock Text="2. Разблокирует или блокирует только User." Style="{StaticResource MutedText}" />
-                            <TextBlock Text="3. Не меняет роли и не видит админские настройки." Style="{StaticResource MutedText}" />
+                            <TextBlock Text="1. Проверяет очередь ситуаций." Style="{StaticResource MutedText}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                            <TextBlock Text="2. Блокирует или разблокирует только пользователей с ролью User." Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+                            <TextBlock Text="3. Не меняет роли и не видит админские настройки." Style="{StaticResource MutedText}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -76,20 +84,60 @@
                         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
                             <TextBlock Text="Очередь оператора" Style="{StaticResource PageTitle}" />
                             <TextBlock Text="Список сформирован по активности пользователей и статусам аккаунтов."
-                                       Style="{StaticResource MutedText}" />
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap" />
                         </StackPanel>
 
                         <DataGrid x:Name="QueueGrid"
+                                  Style="{StaticResource StyledDataGrid}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   MinHeight="500"
-                                  HorizontalScrollBarVisibility="Disabled"
                                   SelectionChanged="QueueGrid_SelectionChanged">
+                            <DataGrid.Resources>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Padding" Value="12,10" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                                <Style x:Key="WrappingCellText" TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="LineHeight" Value="18" />
+                                </Style>
+                            </DataGrid.Resources>
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Пользователь" Binding="{Binding Email}" Width="2*" MinWidth="170" />
-                                <DataGridTextColumn Header="Ситуация" Binding="{Binding Issue}" Width="2*" MinWidth="170" />
-                                <DataGridTextColumn Header="Приоритет" Binding="{Binding Priority}" Width="*" MinWidth="100" />
-                                <DataGridTextColumn Header="Комментарий" Binding="{Binding Detail}" Width="*" />
+                                <DataGridTextColumn Header="Пользователь"
+                                                    Binding="{Binding Email}"
+                                                    Width="1.3*"
+                                                    MinWidth="150"
+                                                    ElementStyle="{StaticResource WrappingCellText}" />
+                                <DataGridTextColumn Header="Ситуация"
+                                                    Binding="{Binding Issue}"
+                                                    Width="1.5*"
+                                                    MinWidth="170"
+                                                    ElementStyle="{StaticResource WrappingCellText}" />
+                                <DataGridTextColumn Header="Приоритет"
+                                                    Binding="{Binding Priority}"
+                                                    Width="0.9*"
+                                                    MinWidth="110"
+                                                    ElementStyle="{StaticResource WrappingCellText}" />
+                                <DataGridTextColumn Header="Комментарий"
+                                                    Binding="{Binding Detail}"
+                                                    Width="1.8*"
+                                                    MinWidth="230"
+                                                    ElementStyle="{StaticResource WrappingCellText}" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
@@ -100,19 +148,32 @@
                         <TextBlock Text="Карточка задачи" Style="{StaticResource PageTitle}" />
                         <Border Background="#F7F5ED" CornerRadius="8" Padding="12" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock x:Name="SelectedUserNameText" Text="Задача не выбрана" FontWeight="Bold" TextWrapping="Wrap" />
-                                <TextBlock x:Name="SelectedUserRoleText" Text="Выберите строку очереди" Style="{StaticResource MutedText}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                <TextBlock x:Name="SelectedUserNameText"
+                                           Text="Задача не выбрана"
+                                           FontWeight="Bold"
+                                           TextWrapping="Wrap" />
+                                <TextBlock x:Name="SelectedUserRoleText"
+                                           Text="Выберите строку очереди"
+                                           Style="{StaticResource MutedText}"
+                                           Margin="0,4,0,0"
+                                           TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
 
-                        <Button x:Name="ToggleStatusButton" Content="Изменить статус User" Style="{StaticResource PrimaryButton}" Click="ToggleStatus_Click" />
-                        <Button Content="Обновить очередь" Click="RefreshButton_Click" />
+                        <Button x:Name="ToggleStatusButton"
+                                Content="Выберите пользователя"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="ToggleStatus_Click" />
+                        <Button Content="Обновить очередь"
+                                Click="RefreshButton_Click" />
 
-                        <TextBlock x:Name="StatusTextBlock" Style="{StaticResource MutedText}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                        <TextBlock x:Name="StatusTextBlock"
+                                   Style="{StaticResource MutedText}"
+                                   Margin="0,12,0,0"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
             </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>
-
