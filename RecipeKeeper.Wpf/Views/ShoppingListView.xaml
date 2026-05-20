@@ -1,22 +1,128 @@
 <UserControl x:Class="RecipeKeeper.Wpf.Views.ShoppingListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Border Style="{StaticResource PageCard}">
-        <DockPanel>
-            <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,14">
-                <TextBlock Text="Список покупок" Style="{StaticResource PageTitle}" Margin="0,0,24,0" />
-                <Button Content="Сформировать заново" Style="{StaticResource PrimaryButton}" Click="GenerateButton_Click" />
-                <Button Content="Отметить / вернуть" Click="ToggleButton_Click" />
-                <Button Content="Удалить" Style="{StaticResource DangerButton}" Click="DeleteButton_Click" />
-                <Button Content="Очистить список" Click="ClearButton_Click" />
-            </WrapPanel>
-            <DataGrid x:Name="ShoppingGrid" AutoGenerateColumns="False" IsReadOnly="True">
-                <DataGrid.Columns>
-                    <DataGridCheckBoxColumn Header="Куплено" Binding="{Binding IsBought}" Width="90" />
-                    <DataGridTextColumn Header="Продукт" Binding="{Binding Name}" Width="*" />
-                    <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="220" />
-                </DataGrid.Columns>
-            </DataGrid>
-        </DockPanel>
-    </Border>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:RecipeKeeper.Wpf.Ui">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="360" MinWidth="320" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource PageCard}" Margin="0,0,18,0">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                          HorizontalScrollBarVisibility="Disabled"
+                          CanContentScroll="False"
+                          PanningMode="VerticalOnly">
+                <StackPanel>
+                    <TextBlock Text="Список покупок" Style="{StaticResource PageTitle}" />
+                    <TextBlock Text="Сформируйте список из рецепта, плана питания или избранного."
+                               Style="{StaticResource MutedText}"
+                               Margin="0,0,0,18"
+                               TextWrapping="Wrap" />
+
+                    <TextBlock Text="Конкретное блюдо" Style="{StaticResource TasteNestFieldLabelStyle}" />
+                    <ComboBox x:Name="RecipeComboBox"
+                              Style="{StaticResource TasteNestComboBoxStyle}"
+                              DisplayMemberPath="Title"
+                              IsEditable="True"
+                              IsTextSearchEnabled="False"
+                              StaysOpenOnEdit="True"
+                              Margin="0,0,0,10" />
+                    <Button Content="Сформировать по блюду"
+                            Style="{StaticResource PrimaryButton}"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,0,0,16"
+                            Click="GenerateRecipeButton_Click" />
+
+                    <TextBlock Text="Готовые источники" Style="{StaticResource TasteNestFieldLabelStyle}" />
+                    <UniformGrid Columns="1" Margin="0,0,0,18">
+                        <Button Content="Из плана питания"
+                                Style="{StaticResource SecondaryButton}"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,0,0,8"
+                                Click="GenerateMealPlanButton_Click" />
+                        <Button Content="Из избранных рецептов"
+                                Style="{StaticResource SecondaryButton}"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,0,0,0"
+                                Click="GenerateButton_Click" />
+                    </UniformGrid>
+
+                    <Border Background="{StaticResource SecondaryButtonBrush}"
+                            BorderBrush="{StaticResource BorderBrushSoft}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="16"
+                            Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Добавить вручную" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
+                            <TextBlock Text="Продукт" Style="{StaticResource TasteNestFieldLabelStyle}" />
+                            <TextBox x:Name="ManualNameTextBox"
+                                     Style="{StaticResource TasteNestTextBoxStyle}"
+                                     Tag="Например: молоко"
+                                     Margin="0,0,0,12" />
+                            <TextBlock Text="Количество" Style="{StaticResource TasteNestFieldLabelStyle}" />
+                            <TextBox x:Name="ManualQuantityTextBox"
+                                     Style="{StaticResource TasteNestTextBoxStyle}"
+                                     Tag="Например: 1 л"
+                                     Margin="0,0,0,12" />
+                            <Button Content="Добавить позицию"
+                                    Style="{StaticResource PrimaryButton}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0"
+                                    Click="AddManualButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock x:Name="StatusTextBlock"
+                               Style="{StaticResource MutedText}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="1" Style="{StaticResource PageCard}">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Текущие покупки" Style="{StaticResource PageTitle}" />
+                        <TextBlock x:Name="SummaryTextBlock"
+                                   Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                        <Button Content="Отметить / вернуть"
+                                Style="{StaticResource SecondaryButton}"
+                                Click="ToggleButton_Click" />
+                        <Button Content="Удалить"
+                                Style="{StaticResource DangerButton}"
+                                Click="DeleteButton_Click" />
+                        <Button Content="Очистить список"
+                                Style="{StaticResource SecondaryButton}"
+                                Click="ClearButton_Click" />
+                    </WrapPanel>
+                </Grid>
+
+                <DataGrid x:Name="ShoppingGrid"
+                          Style="{StaticResource StyledDataGrid}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          SelectionUnit="FullRow"
+                          ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ui:MouseWheelScroll.ForwardNestedWheel="True">
+                    <DataGrid.Columns>
+                        <DataGridCheckBoxColumn Header="Куплено" Binding="{Binding IsBought}" Width="90" />
+                        <DataGridTextColumn Header="Продукт" Binding="{Binding Name}" Width="*" />
+                        <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="240" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+    </Grid>
 </UserControl>

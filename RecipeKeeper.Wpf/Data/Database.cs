@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 
 namespace RecipeKeeper.Wpf.Data;
 
-public static class Database
+public static partial class Database
 {
     public static void Initialize()
     {
@@ -137,6 +137,19 @@ public static class Database
                     CONSTRAINT FK_RecipeStats_Recipes FOREIGN KEY (RecipeId) REFERENCES dbo.Recipes(Id) ON DELETE CASCADE
                 );
             END;
+
+            IF OBJECT_ID(N'dbo.UserRecipeStats', N'U') IS NULL
+            BEGIN
+                CREATE TABLE dbo.UserRecipeStats (
+                    UserId INT NOT NULL,
+                    RecipeId INT NOT NULL,
+                    CookCount INT NOT NULL DEFAULT 0,
+                    LastCookedAt DATETIME2 NULL,
+                    CONSTRAINT PK_UserRecipeStats PRIMARY KEY (UserId, RecipeId),
+                    CONSTRAINT FK_UserRecipeStats_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE,
+                    CONSTRAINT FK_UserRecipeStats_Recipes FOREIGN KEY (RecipeId) REFERENCES dbo.Recipes(Id) ON DELETE CASCADE
+                );
+            END;
             """;
         command.ExecuteNonQuery();
 
@@ -144,6 +157,7 @@ public static class Database
         EnsureRecipeColumns(connection);
         EnsureProductColumns(connection);
         Seed();
+        RepairSeedRecipeInstructions(connection);
         RepairSeedRecipeImages(connection);
     }
 
@@ -163,6 +177,8 @@ public static class Database
             throw new InvalidOperationException("База TasteNest на сервере ещё не подготовлена. Сначала запустите приложение на компьютере-сервере с локальными настройками.");
         }
 
+        EnsureUserRecipeStatsTable(connection);
+        RepairSeedRecipeInstructions(connection);
         RepairSeedRecipeImages(connection);
     }
 
@@ -328,7 +344,9 @@ public static class Database
             users.Count(user => !user.IsActive),
             Scalar("SELECT COUNT(*) FROM dbo.Recipes"),
             Scalar("SELECT COUNT(*) FROM dbo.Products"),
-            Scalar("SELECT COUNT(*) FROM dbo.Favorites"));
+            Scalar("SELECT COUNT(*) FROM dbo.Favorites"),
+            Scalar("SELECT COUNT(*) FROM dbo.RecipeViews"),
+            Scalar("SELECT ISNULL(SUM(CookCount), 0) FROM dbo.RecipeStats"));
     }
 
     public static List<OperatorQueueItem> GetOperatorQueue()
@@ -754,16 +772,32 @@ public static class Database
         RemoveMealPlanRecipe(userId, dayName);
     }
 
-    public static void IncrementCookCount(int recipeId)
+    public static void IncrementCookCount(int recipeId) => IncrementCookCount(0, recipeId);
+
+    public static void IncrementCookCount(int userId, int recipeId)
     {
         using var connection = OpenConnection();
+        EnsureUserRecipeStatsTable(connection);
         using var command = connection.CreateCommand();
         command.CommandText = """
             IF EXISTS (SELECT 1 FROM dbo.RecipeStats WHERE RecipeId = @recipeId)
                 UPDATE dbo.RecipeStats SET CookCount = CookCount + 1 WHERE RecipeId = @recipeId;
             ELSE
                 INSERT INTO dbo.RecipeStats (RecipeId, CookCount, Rating) VALUES (@recipeId, 1, 5);
+
+            IF @userId > 0
+            BEGIN
+                IF EXISTS (SELECT 1 FROM dbo.UserRecipeStats WHERE UserId = @userId AND RecipeId = @recipeId)
+                    UPDATE dbo.UserRecipeStats
+                    SET CookCount = CookCount + 1,
+                        LastCookedAt = SYSUTCDATETIME()
+                    WHERE UserId = @userId AND RecipeId = @recipeId;
+                ELSE
+                    INSERT INTO dbo.UserRecipeStats (UserId, RecipeId, CookCount, LastCookedAt)
+                    VALUES (@userId, @recipeId, 1, SYSUTCDATETIME());
+            END;
             """;
+        command.Parameters.AddWithValue("@userId", userId);
         command.Parameters.AddWithValue("@recipeId", recipeId);
         command.ExecuteNonQuery();
     }
@@ -828,10 +862,7 @@ public static class Database
     public static void GenerateShoppingFromFavorites(int userId)
     {
         using var connection = OpenConnection();
-        using var clearCommand = connection.CreateCommand();
-        clearCommand.CommandText = "DELETE FROM dbo.ShoppingItems WHERE UserId = @userId";
-        clearCommand.Parameters.AddWithValue("@userId", userId);
-        clearCommand.ExecuteNonQuery();
+        ClearShoppingItems(connection, userId);
 
         using var command = connection.CreateCommand();
         command.CommandText = """
@@ -846,17 +877,85 @@ public static class Database
         command.ExecuteNonQuery();
     }
 
-    public static List<StatItem> GetCategoryStats()
+    public static void GenerateShoppingFromRecipe(int userId, int recipeId)
+    {
+        using var connection = OpenConnection();
+        ClearShoppingItems(connection, userId);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO dbo.ShoppingItems (UserId, Name, Quantity, IsBought)
+            SELECT @userId, i.Name, STRING_AGG(ISNULL(i.Amount, N''), N', '), 0
+            FROM dbo.Ingredients i
+            WHERE i.RecipeId = @recipeId
+            GROUP BY i.Name
+            """;
+        command.Parameters.AddWithValue("@userId", userId);
+        command.Parameters.AddWithValue("@recipeId", recipeId);
+        command.ExecuteNonQuery();
+    }
+
+    public static void GenerateShoppingFromMealPlan(int userId)
+    {
+        using var connection = OpenConnection();
+        ClearShoppingItems(connection, userId);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO dbo.ShoppingItems (UserId, Name, Quantity, IsBought)
+            SELECT @userId, i.Name, STRING_AGG(ISNULL(i.Amount, N''), N', '), 0
+            FROM dbo.MealPlan m
+            JOIN dbo.Ingredients i ON i.RecipeId = m.RecipeId
+            WHERE m.UserId = @userId
+            GROUP BY i.Name
+            """;
+        command.Parameters.AddWithValue("@userId", userId);
+        command.ExecuteNonQuery();
+    }
+
+    private static void ClearShoppingItems(SqlConnection connection, int userId)
+    {
+        using var clearCommand = connection.CreateCommand();
+        clearCommand.CommandText = "DELETE FROM dbo.ShoppingItems WHERE UserId = @userId";
+        clearCommand.Parameters.AddWithValue("@userId", userId);
+        clearCommand.ExecuteNonQuery();
+    }
+
+    public static List<StatItem> GetCategoryStats() => GetCategoryStats(null);
+
+    public static List<StatItem> GetCategoryStats(int? userId)
     {
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT TOP 8 c.Name, COUNT(r.Id)
-            FROM dbo.Categories c
-            JOIN dbo.Recipes r ON r.CategoryId = c.Id
-            GROUP BY c.Name
-            ORDER BY COUNT(r.Id) DESC
-            """;
+        if (userId.HasValue)
+        {
+            EnsureUserRecipeStatsTable(connection);
+            command.CommandText = """
+                SELECT TOP 8 c.Name, COUNT(*)
+                FROM (
+                    SELECT RecipeId FROM dbo.RecipeViews WHERE UserId = @userId
+                    UNION ALL
+                    SELECT RecipeId FROM dbo.Favorites WHERE UserId = @userId
+                    UNION ALL
+                    SELECT RecipeId FROM dbo.UserRecipeStats WHERE UserId = @userId AND CookCount > 0
+                ) activity
+                JOIN dbo.Recipes r ON r.Id = activity.RecipeId
+                JOIN dbo.Categories c ON c.Id = r.CategoryId
+                GROUP BY c.Name
+                ORDER BY COUNT(*) DESC, c.Name
+                """;
+            command.Parameters.AddWithValue("@userId", userId.Value);
+        }
+        else
+        {
+            command.CommandText = """
+                SELECT TOP 8 c.Name, COUNT(r.Id)
+                FROM dbo.Categories c
+                JOIN dbo.Recipes r ON r.CategoryId = c.Id
+                GROUP BY c.Name
+                ORDER BY COUNT(r.Id) DESC
+                """;
+        }
         using var reader = command.ExecuteReader();
         var stats = new List<StatItem>();
         while (reader.Read())
@@ -867,16 +966,39 @@ public static class Database
         return stats;
     }
 
-    public static List<StatItem> GetIngredientStats()
+    public static List<StatItem> GetIngredientStats() => GetIngredientStats(null);
+
+    public static List<StatItem> GetIngredientStats(int? userId)
     {
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT TOP 8 Name, COUNT(*)
-            FROM dbo.Ingredients
-            GROUP BY Name
-            ORDER BY COUNT(*) DESC
-            """;
+        if (userId.HasValue)
+        {
+            EnsureUserRecipeStatsTable(connection);
+            command.CommandText = """
+                SELECT TOP 8 i.Name, COUNT(*)
+                FROM (
+                    SELECT RecipeId FROM dbo.RecipeViews WHERE UserId = @userId
+                    UNION ALL
+                    SELECT RecipeId FROM dbo.Favorites WHERE UserId = @userId
+                    UNION ALL
+                    SELECT RecipeId FROM dbo.UserRecipeStats WHERE UserId = @userId AND CookCount > 0
+                ) activity
+                JOIN dbo.Ingredients i ON i.RecipeId = activity.RecipeId
+                GROUP BY i.Name
+                ORDER BY COUNT(*) DESC, i.Name
+                """;
+            command.Parameters.AddWithValue("@userId", userId.Value);
+        }
+        else
+        {
+            command.CommandText = """
+                SELECT TOP 8 Name, COUNT(*)
+                FROM dbo.Ingredients
+                GROUP BY Name
+                ORDER BY COUNT(*) DESC
+                """;
+        }
         using var reader = command.ExecuteReader();
         var stats = new List<StatItem>();
         while (reader.Read())
@@ -890,6 +1012,7 @@ public static class Database
     public static StatisticsSummary GetStatisticsSummary(int userId)
     {
         using var connection = OpenConnection();
+        EnsureUserRecipeStatsTable(connection);
 
         int Scalar(string sql)
         {
@@ -900,22 +1023,45 @@ public static class Database
         }
 
         return new StatisticsSummary(
-            Scalar("SELECT COUNT(*) FROM dbo.Recipes"),
+            Scalar("SELECT COUNT(*) FROM dbo.Recipes WHERE UserId = @userId"),
             Scalar("SELECT COUNT(*) FROM dbo.Favorites WHERE UserId = @userId"),
             Scalar("SELECT COUNT(*) FROM dbo.Products WHERE UserId = @userId"),
-            Scalar("SELECT ISNULL(SUM(CookCount), 0) FROM dbo.RecipeStats"));
+            Scalar("SELECT ISNULL(SUM(CookCount), 0) FROM dbo.UserRecipeStats WHERE UserId = @userId"));
     }
 
-    public static List<RecipePopularityStat> GetRecipePopularityStats()
+    public static List<RecipePopularityStat> GetRecipePopularityStats() => GetRecipePopularityStats(null);
+
+    public static List<RecipePopularityStat> GetRecipePopularityStats(int? userId)
     {
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT TOP 6 r.Title, ISNULL(s.CookCount, 0), ISNULL(s.Rating, 5)
-            FROM dbo.Recipes r
-            LEFT JOIN dbo.RecipeStats s ON s.RecipeId = r.Id
-            ORDER BY ISNULL(s.CookCount, 0) DESC, ISNULL(s.Rating, 5) DESC, r.Title
-            """;
+        if (userId.HasValue)
+        {
+            EnsureUserRecipeStatsTable(connection);
+            command.CommandText = """
+                SELECT TOP 6
+                    r.Title,
+                    COUNT(v.Id) + CASE WHEN f.RecipeId IS NULL THEN 0 ELSE 1 END + ISNULL(us.CookCount, 0) AS ActivityCount,
+                    ISNULL(us.CookCount, 0) AS CookCount
+                FROM dbo.Recipes r
+                LEFT JOIN dbo.RecipeViews v ON v.RecipeId = r.Id AND v.UserId = @userId
+                LEFT JOIN dbo.Favorites f ON f.RecipeId = r.Id AND f.UserId = @userId
+                LEFT JOIN dbo.UserRecipeStats us ON us.RecipeId = r.Id AND us.UserId = @userId
+                GROUP BY r.Id, r.Title, f.RecipeId, us.CookCount
+                HAVING COUNT(v.Id) > 0 OR f.RecipeId IS NOT NULL OR ISNULL(us.CookCount, 0) > 0
+                ORDER BY ActivityCount DESC, CookCount DESC, r.Title
+                """;
+            command.Parameters.AddWithValue("@userId", userId.Value);
+        }
+        else
+        {
+            command.CommandText = """
+                SELECT TOP 6 r.Title, ISNULL(s.CookCount, 0), ISNULL(s.Rating, 5)
+                FROM dbo.Recipes r
+                LEFT JOIN dbo.RecipeStats s ON s.RecipeId = r.Id
+                ORDER BY ISNULL(s.CookCount, 0) DESC, ISNULL(s.Rating, 5) DESC, r.Title
+                """;
+        }
 
         using var reader = command.ExecuteReader();
         var stats = new List<RecipePopularityStat>();
@@ -967,6 +1113,26 @@ public static class Database
         EnsureColumn(connection, "Products", "Unit", "NVARCHAR(40) NOT NULL DEFAULT N''");
         EnsureColumn(connection, "Products", "Category", "NVARCHAR(100) NOT NULL DEFAULT N''");
         EnsureColumn(connection, "Products", "Note", "NVARCHAR(500) NOT NULL DEFAULT N''");
+    }
+
+    private static void EnsureUserRecipeStatsTable(SqlConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            IF OBJECT_ID(N'dbo.UserRecipeStats', N'U') IS NULL
+            BEGIN
+                CREATE TABLE dbo.UserRecipeStats (
+                    UserId INT NOT NULL,
+                    RecipeId INT NOT NULL,
+                    CookCount INT NOT NULL DEFAULT 0,
+                    LastCookedAt DATETIME2 NULL,
+                    CONSTRAINT PK_UserRecipeStats PRIMARY KEY (UserId, RecipeId),
+                    CONSTRAINT FK_UserRecipeStats_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE,
+                    CONSTRAINT FK_UserRecipeStats_Recipes FOREIGN KEY (RecipeId) REFERENCES dbo.Recipes(Id) ON DELETE CASCADE
+                );
+            END;
+            """;
+        command.ExecuteNonQuery();
     }
 
     private static void EnsureColumn(SqlConnection connection, string tableName, string columnName, string definition)
@@ -1201,31 +1367,32 @@ public static class Database
 
     private static void AddSeedRecipe(string title, string description, string instructions, int cookingTime, int servings, string categoryName, string ingredientsText, string difficulty = "Лёгкий", string imageUrl = "")
     {
+        var fullInstructions = GetSeedRecipeInstructions(title, instructions);
         using var connection = OpenConnection();
         using var existsCommand = connection.CreateCommand();
-        existsCommand.CommandText = "SELECT COUNT(*) FROM dbo.Recipes WHERE Title = @title";
+        existsCommand.CommandText = "SELECT COUNT(*) FROM dbo.Recipes WHERE Title = @title AND UserId IS NULL";
         existsCommand.Parameters.AddWithValue("@title", title);
         if (Convert.ToInt32(existsCommand.ExecuteScalar()) > 0)
         {
-            if (!string.IsNullOrWhiteSpace(imageUrl))
-            {
-                using var updateCommand = connection.CreateCommand();
-                updateCommand.CommandText = """
-                    UPDATE dbo.Recipes
-                    SET ImageUrl = @imageUrl,
-                        Difficulty = @difficulty
-                    WHERE Title = @title
-                    """;
-                updateCommand.Parameters.AddWithValue("@title", title);
-                updateCommand.Parameters.AddWithValue("@imageUrl", imageUrl);
-                updateCommand.Parameters.AddWithValue("@difficulty", difficulty);
-                updateCommand.ExecuteNonQuery();
-            }
+            using var updateCommand = connection.CreateCommand();
+            updateCommand.CommandText = """
+                UPDATE dbo.Recipes
+                SET Instructions = @instructions,
+                    ImageUrl = CASE WHEN @imageUrl = N'' THEN ImageUrl ELSE @imageUrl END,
+                    Difficulty = @difficulty
+                WHERE Title = @title
+                  AND UserId IS NULL
+                """;
+            updateCommand.Parameters.AddWithValue("@title", title);
+            updateCommand.Parameters.AddWithValue("@instructions", fullInstructions);
+            updateCommand.Parameters.AddWithValue("@imageUrl", imageUrl.Trim());
+            updateCommand.Parameters.AddWithValue("@difficulty", difficulty);
+            updateCommand.ExecuteNonQuery();
 
             return;
         }
 
-        AddRecipeExtended(0, title, description, instructions, cookingTime, servings, EnsureCategory(categoryName), difficulty, imageUrl, ingredientsText);
+        AddRecipeExtended(0, title, description, fullInstructions, cookingTime, servings, EnsureCategory(categoryName), difficulty, imageUrl, ingredientsText);
     }
 
     private sealed record SeedRecipe(string Title, string Description, string Instructions, int CookingTime, int Servings, string CategoryName, string Difficulty, string ImageUrl, string IngredientsText);

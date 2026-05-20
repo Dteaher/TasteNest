@@ -1,7 +1,8 @@
 <UserControl x:Class="RecipeKeeper.Wpf.Views.MealPlanView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid MinWidth="620">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:RecipeKeeper.Wpf.Ui">
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="320" MinWidth="280" />
             <ColumnDefinition Width="*" />
@@ -17,15 +18,16 @@
                 <ComboBox x:Name="RecipeComboBox" DisplayMemberPath="Title" />
                 <Button Content="Добавить в план" Style="{StaticResource PrimaryButton}" Click="AddButton_Click" />
                 <Button Content="Удалить день" Style="{StaticResource DangerButton}" Click="DeleteButton_Click" />
-                <Button Content="Сформировать покупки" Click="ShoppingButton_Click" />
+                <Button Content="Сформировать покупки" Style="{StaticResource FullWidthButton}" Click="ShoppingButton_Click" />
             </StackPanel>
         </Border>
         <Border Grid.Column="1" Style="{StaticResource PageCard}">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Text="План на неделю" Style="{StaticResource PageTitle}" />
                 <ListBox x:Name="PlanListBox"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Hidden"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ui:MouseWheelScroll.ForwardNestedWheel="True"
                          MouseDoubleClick="PlanListBox_MouseDoubleClick" />
             </DockPanel>
         </Border>

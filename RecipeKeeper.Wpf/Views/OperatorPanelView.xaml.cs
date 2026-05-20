@@ -35,7 +35,7 @@ public partial class OperatorPanelView : UserControl
     {
         if (_selectedItem is null)
         {
-            StatusTextBlock.Text = "Выберите задачу.";
+            StatusTextBlock.Text = "Выберите задачу в очереди.";
             return;
         }
 
@@ -70,14 +70,23 @@ public partial class OperatorPanelView : UserControl
     {
         _selectedItem = item;
 
-        SelectedUserNameText.Text = item is null
-            ? "Задача не выбрана"
-            : item.Email;
+        if (item is null)
+        {
+            SelectedUserNameText.Text = "Задача не выбрана";
+            SelectedUserRoleText.Text = "Выберите строку очереди";
+            ToggleStatusButton.Content = "Выберите пользователя";
+            ToggleStatusButton.IsEnabled = false;
+            return;
+        }
 
-        SelectedUserRoleText.Text = item is null
-            ? "Выберите строку очереди"
-            : $"{item.Issue} · Приоритет: {item.Priority}";
+        var user = Database.GetManagedUsers().FirstOrDefault(managedUser => managedUser.Id == item.UserId);
+        var status = user?.IsActive == true ? "активен" : "заблокирован";
 
-        ToggleStatusButton.IsEnabled = item is not null && item.CanBlock;
+        SelectedUserNameText.Text = item.Email;
+        SelectedUserRoleText.Text = $"{item.Issue} · Приоритет: {item.Priority} · Статус: {status}";
+        ToggleStatusButton.Content = user?.IsActive == true
+            ? "Блокировать пользователя"
+            : "Разблокировать пользователя";
+        ToggleStatusButton.IsEnabled = item.CanBlock && user is not null && user.Role == "User";
     }
 }

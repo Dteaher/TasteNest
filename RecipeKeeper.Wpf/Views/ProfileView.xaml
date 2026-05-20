@@ -1,8 +1,41 @@
 <UserControl x:Class="RecipeKeeper.Wpf.Views.ProfileView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:RecipeKeeper.Wpf.Ui">
+    <UserControl.Resources>
+        <Style x:Key="ActivityListItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ItemRoot"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{StaticResource BorderBrushSoft}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="14">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource AccentLightBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemRoot" Property="Background" Value="{StaticResource AccentLightBrush}" />
+                                <Setter TargetName="ItemRoot" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <ScrollViewer Style="{StaticResource PageScrollViewer}">
-        <Grid MinWidth="720">
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="320" MinWidth="280" />
                 <ColumnDefinition Width="*" />
@@ -59,22 +92,87 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="1" Style="{StaticResource PageCard}" Margin="0,0,0,16">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="Последняя активность" Style="{StaticResource PageTitle}" />
-                        <ListBox x:Name="HistoryListBox" MinHeight="170">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Border BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="0,0,0,1" Padding="0,10">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Title}" FontWeight="Bold" />
-                                            <TextBlock Text="{Binding ViewedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Foreground="{StaticResource MutedTextBrush}" />
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </DockPanel>
+                <Border Grid.Row="1" Style="{StaticResource PageCard}" Padding="0" Margin="0,0,0,16">
+                    <Expander x:Name="ActivityExpander"
+                              IsExpanded="False"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="0">
+                        <Expander.Header>
+                            <Grid Margin="20,18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Text="Последняя активность"
+                                               Style="{StaticResource PageTitle}"
+                                               Margin="0,0,0,4" />
+                                    <TextBlock Text="Недавно открытые рецепты и действия в профиле."
+                                               Style="{StaticResource MutedText}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <Border Grid.Column="1"
+                                        Style="{StaticResource StatusBadge}"
+                                        Background="{StaticResource AccentLightBrush}"
+                                        VerticalAlignment="Center"
+                                        Margin="16,0,0,0">
+                                    <TextBlock x:Name="ActivityCountText"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontWeight="SemiBold" />
+                                </Border>
+                            </Grid>
+                        </Expander.Header>
+
+                        <Border BorderBrush="{StaticResource BorderBrushSoft}"
+                                BorderThickness="0,1,0,0"
+                                Padding="20,0,20,20">
+                            <ListBox x:Name="HistoryListBox"
+                                     MaxHeight="260"
+                                     Margin="0,18,0,0"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     ItemContainerStyle="{StaticResource ActivityListItem}"
+                                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.CanContentScroll="False"
+                                     ui:MouseWheelScroll.ForwardNestedWheel="True">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="28"
+                                                    Height="28"
+                                                    CornerRadius="9"
+                                                    Background="{StaticResource SecondaryButtonBrush}"
+                                                    VerticalAlignment="Top">
+                                                <TextBlock Text="↗"
+                                                           Foreground="{StaticResource AccentBrush}"
+                                                           FontWeight="Bold"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextBrush}"
+                                                           TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding ViewedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}"
+                                                           Foreground="{StaticResource MutedTextBrush}"
+                                                           FontSize="13"
+                                                           Margin="0,4,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                    </Expander>
                 </Border>
 
                 <Border Grid.Row="0" Style="{StaticResource PageCard}" Margin="0,0,0,16">
@@ -127,6 +225,27 @@
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="Статистика" FontWeight="Bold" FontSize="17" />
                                         <TextBlock Text="Итоги по рецептам, продуктам и активности." Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+
+                            <Button x:Name="OperatorPanelQuickButton"
+                                    Style="{StaticResource QuickActionButton}"
+                                    Tag="OperatorPanel"
+                                    Click="InsightNavigate_Click"
+                                    Margin="12,0,0,0"
+                                    Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="42" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="34" Height="34" CornerRadius="10" Background="#EAF3EF" VerticalAlignment="Top">
+                                        <TextBlock Text="&#x1F6E0;" Foreground="{StaticResource AccentDarkBrush}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Панель оператора" FontWeight="Bold" FontSize="17" />
+                                        <TextBlock Text="Очередь задач и поддержка пользователей." Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,0" />
                                     </StackPanel>
                                 </Grid>
                             </Button>
