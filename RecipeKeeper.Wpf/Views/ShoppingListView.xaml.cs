@@ -15,7 +15,8 @@ public partial class ShoppingListView : UserControl
 
         _recipes = Database.SearchRecipes("", null, Array.Empty<string>());
         RecipeComboBox.ItemsSource = _recipes;
-        RecipeComboBox.SelectedIndex = _recipes.Count > 0 ? 0 : -1;
+        RecipeComboBox.SelectedIndex = -1;
+        RecipeComboBox.Text = string.Empty;
         RecipeComboBox.AddHandler(TextBox.TextChangedEvent, new TextChangedEventHandler(RecipeSearchTextChanged));
 
         Refresh();
