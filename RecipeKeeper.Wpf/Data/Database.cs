@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 
 namespace RecipeKeeper.Wpf.Data;
@@ -49,6 +50,9 @@ public static partial class Database
                     UserId INT NULL,
                     ImageUrl NVARCHAR(600) NOT NULL DEFAULT N'',
                     Difficulty NVARCHAR(60) NOT NULL DEFAULT N'Лёгкий',
+                    Status NVARCHAR(40) NOT NULL DEFAULT N'Published',
+                    ModerationComment NVARCHAR(500) NOT NULL DEFAULT N'',
+                    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
                     CONSTRAINT FK_Recipes_Categories FOREIGN KEY (CategoryId) REFERENCES dbo.Categories(Id),
                     CONSTRAINT FK_Recipes_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
                 );
@@ -178,6 +182,9 @@ public static partial class Database
         }
 
         EnsureUserRecipeStatsTable(connection);
+        EnsureUserColumns(connection);
+        EnsureRecipeColumns(connection);
+        EnsureProductColumns(connection);
         RepairSeedRecipeInstructions(connection);
         RepairSeedRecipeImages(connection);
     }
@@ -393,6 +400,20 @@ public static partial class Database
         return GetManagedUsers().FirstOrDefault(user => user.Id == userId);
     }
 
+    private static bool IsAdminUser(int userId)
+    {
+        if (userId == 0)
+        {
+            return false;
+        }
+
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM dbo.Users WHERE Id = @userId AND Role = N'Admin'";
+        command.Parameters.AddWithValue("@userId", userId);
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
     public static List<Category> GetCategories()
     {
         using var connection = OpenConnection();
@@ -413,7 +434,7 @@ public static partial class Database
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий')
+            SELECT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий'), ISNULL(r.Status, N'Published')
             FROM dbo.Recipes r
             JOIN dbo.Categories c ON c.Id = r.CategoryId
             WHERE r.Id = @recipeId
@@ -428,11 +449,11 @@ public static partial class Database
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         var sql = new StringBuilder("""
-            SELECT DISTINCT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий')
+            SELECT DISTINCT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий'), ISNULL(r.Status, N'Published')
             FROM dbo.Recipes r
             JOIN dbo.Categories c ON c.Id = r.CategoryId
             LEFT JOIN dbo.Ingredients i ON i.RecipeId = r.Id
-            WHERE 1 = 1
+            WHERE ISNULL(r.Status, N'Published') = N'Published'
             """);
 
         if (!string.IsNullOrWhiteSpace(query))
@@ -498,9 +519,10 @@ public static partial class Database
         using var transaction = connection.BeginTransaction();
         using var recipeCommand = connection.CreateCommand();
         recipeCommand.Transaction = transaction;
+        var status = userId == 0 || IsAdminUser(userId) ? "Published" : "Pending";
         recipeCommand.CommandText = """
-            INSERT INTO dbo.Recipes (Title, Description, Instructions, CookingTime, Servings, CategoryId, UserId, ImageUrl, Difficulty)
-            VALUES (@title, @description, @instructions, @cookingTime, @servings, @categoryId, @userId, @imageUrl, @difficulty);
+            INSERT INTO dbo.Recipes (Title, Description, Instructions, CookingTime, Servings, CategoryId, UserId, ImageUrl, Difficulty, Status, ModerationComment, CreatedAt)
+            VALUES (@title, @description, @instructions, @cookingTime, @servings, @categoryId, @userId, @imageUrl, @difficulty, @status, N'', SYSUTCDATETIME());
             SELECT CAST(SCOPE_IDENTITY() AS INT);
             """;
         recipeCommand.Parameters.AddWithValue("@title", title.Trim());
@@ -512,6 +534,7 @@ public static partial class Database
         recipeCommand.Parameters.AddWithValue("@userId", userId == 0 ? DBNull.Value : userId);
         recipeCommand.Parameters.AddWithValue("@imageUrl", imageUrl.Trim());
         recipeCommand.Parameters.AddWithValue("@difficulty", difficulty.Trim());
+        recipeCommand.Parameters.AddWithValue("@status", status);
         var recipeId = Convert.ToInt32(recipeCommand.ExecuteScalar());
 
         foreach (var ingredient in ParseIngredients(ingredientsText))
@@ -523,6 +546,25 @@ public static partial class Database
             ingredientCommand.Parameters.AddWithValue("@name", ingredient.Name);
             ingredientCommand.Parameters.AddWithValue("@amount", ingredient.Amount);
             ingredientCommand.ExecuteNonQuery();
+        }
+
+        if (userId > 0 && status == "Published")
+        {
+            using var favoriteCommand = connection.CreateCommand();
+            favoriteCommand.Transaction = transaction;
+            favoriteCommand.CommandText = """
+                IF NOT EXISTS (
+                    SELECT 1 FROM dbo.Favorites
+                    WHERE UserId = @userId AND RecipeId = @recipeId
+                )
+                BEGIN
+                    INSERT INTO dbo.Favorites (UserId, RecipeId, CreatedAt)
+                    VALUES (@userId, @recipeId, SYSUTCDATETIME());
+                END
+                """;
+            favoriteCommand.Parameters.AddWithValue("@userId", userId);
+            favoriteCommand.Parameters.AddWithValue("@recipeId", recipeId);
+            favoriteCommand.ExecuteNonQuery();
         }
 
         transaction.Commit();
@@ -654,10 +696,11 @@ public static partial class Database
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT TOP 20 r.Title, v.ViewedAt
+            SELECT TOP 20 r.Id, r.Title, v.ViewedAt
             FROM dbo.RecipeViews v
             JOIN dbo.Recipes r ON r.Id = v.RecipeId
             WHERE v.UserId = @userId
+              AND ISNULL(r.Status, N'Published') = N'Published'
             ORDER BY v.ViewedAt DESC
             """;
         command.Parameters.AddWithValue("@userId", userId);
@@ -666,7 +709,7 @@ public static partial class Database
         var views = new List<RecipeActivity>();
         while (reader.Read())
         {
-            views.Add(new RecipeActivity(reader.GetString(0), reader.GetDateTime(1).ToLocalTime()));
+            views.Add(new RecipeActivity(reader.GetInt32(0), reader.GetString(1), reader.GetDateTime(2).ToLocalTime()));
         }
 
         return views;
@@ -677,11 +720,12 @@ public static partial class Database
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий')
+            SELECT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий'), ISNULL(r.Status, N'Published')
             FROM dbo.Favorites f
             JOIN dbo.Recipes r ON r.Id = f.RecipeId
             JOIN dbo.Categories c ON c.Id = r.CategoryId
             WHERE f.UserId = @userId
+              AND ISNULL(r.Status, N'Published') = N'Published'
             ORDER BY f.CreatedAt DESC
             """;
         command.Parameters.AddWithValue("@userId", userId);
@@ -701,10 +745,11 @@ public static partial class Database
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий')
+            SELECT r.Id, r.Title, r.Description, r.Instructions, r.CookingTime, r.Servings, c.Name, ISNULL(r.ImageUrl, N''), ISNULL(r.Difficulty, N'Лёгкий'), ISNULL(r.Status, N'Published')
             FROM dbo.Recipes r
             JOIN dbo.Categories c ON c.Id = r.CategoryId
             LEFT JOIN dbo.RecipeStats s ON s.RecipeId = r.Id
+            WHERE ISNULL(r.Status, N'Published') = N'Published'
             ORDER BY ISNULL(s.Rating, 5) DESC, ISNULL(s.CookCount, 0) DESC, r.Title
             """;
 
@@ -866,15 +911,13 @@ public static partial class Database
 
         using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO dbo.ShoppingItems (UserId, Name, Quantity, IsBought)
-            SELECT @userId, i.Name, STRING_AGG(ISNULL(i.Amount, N''), N', '), 0
+            SELECT i.Name, ISNULL(i.Amount, N'')
             FROM dbo.Favorites f
             JOIN dbo.Ingredients i ON i.RecipeId = f.RecipeId
             WHERE f.UserId = @userId
-            GROUP BY i.Name
             """;
         command.Parameters.AddWithValue("@userId", userId);
-        command.ExecuteNonQuery();
+        InsertMissingShoppingItems(connection, userId, ReadIngredientAmounts(command));
     }
 
     public static void GenerateShoppingFromRecipe(int userId, int recipeId)
@@ -884,15 +927,13 @@ public static partial class Database
 
         using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO dbo.ShoppingItems (UserId, Name, Quantity, IsBought)
-            SELECT @userId, i.Name, STRING_AGG(ISNULL(i.Amount, N''), N', '), 0
+            SELECT i.Name, ISNULL(i.Amount, N'')
             FROM dbo.Ingredients i
             WHERE i.RecipeId = @recipeId
-            GROUP BY i.Name
             """;
         command.Parameters.AddWithValue("@userId", userId);
         command.Parameters.AddWithValue("@recipeId", recipeId);
-        command.ExecuteNonQuery();
+        InsertMissingShoppingItems(connection, userId, ReadIngredientAmounts(command));
     }
 
     public static void GenerateShoppingFromMealPlan(int userId)
@@ -902,14 +943,266 @@ public static partial class Database
 
         using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO dbo.ShoppingItems (UserId, Name, Quantity, IsBought)
-            SELECT @userId, i.Name, STRING_AGG(ISNULL(i.Amount, N''), N', '), 0
+            SELECT i.Name, ISNULL(i.Amount, N'')
             FROM dbo.MealPlan m
             JOIN dbo.Ingredients i ON i.RecipeId = m.RecipeId
             WHERE m.UserId = @userId
-            GROUP BY i.Name
             """;
         command.Parameters.AddWithValue("@userId", userId);
+        InsertMissingShoppingItems(connection, userId, ReadIngredientAmounts(command));
+    }
+
+    private static List<IngredientAmount> ReadIngredientAmounts(SqlCommand command)
+    {
+        using var reader = command.ExecuteReader();
+        var ingredients = new List<IngredientAmount>();
+        while (reader.Read())
+        {
+            ingredients.Add(new IngredientAmount(reader.GetString(0), reader.GetString(1)));
+        }
+
+        return ingredients;
+    }
+
+    private static void InsertMissingShoppingItems(SqlConnection connection, int userId, List<IngredientAmount> ingredients)
+    {
+        var products = GetProducts(connection, userId);
+        var needs = BuildShoppingNeeds(ingredients);
+
+        foreach (var need in needs)
+        {
+            var available = products
+                .Where(product => NormalizeProductName(product.Name) == need.NameKey)
+                .Select(product => ParseAmount($"{product.Quantity} {product.Unit}".Trim()))
+                .Where(amount => amount.CanCompareWith(need.Amount))
+                .Sum(amount => amount.BaseValue);
+
+            var missing = need.Amount.BaseValue - available;
+            if (missing <= 0)
+            {
+                continue;
+            }
+
+            AddShoppingItem(connection, userId, need.DisplayName, FormatAmount(missing, need.Amount));
+        }
+    }
+
+    private static List<Product> GetProducts(SqlConnection connection, int userId)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Id, Name, ISNULL(Quantity, N''), ExpiresAt, ISNULL(Unit, N''), ISNULL(Category, N''), ISNULL(Note, N'')
+            FROM dbo.Products
+            WHERE UserId = @userId
+            """;
+        command.Parameters.AddWithValue("@userId", userId);
+
+        using var reader = command.ExecuteReader();
+        var products = new List<Product>();
+        while (reader.Read())
+        {
+            var expiresAt = reader.IsDBNull(3) ? (DateTime?)null : reader.GetDateTime(3);
+            products.Add(new Product(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), expiresAt, reader.GetString(4), reader.GetString(5), reader.GetString(6)));
+        }
+
+        return products;
+    }
+
+    private static List<ShoppingNeed> BuildShoppingNeeds(IEnumerable<IngredientAmount> ingredients)
+    {
+        var needs = new Dictionary<string, ShoppingNeed>();
+        var fallbackNeeds = new Dictionary<string, List<string>>();
+        var names = new Dictionary<string, string>();
+
+        foreach (var ingredient in ingredients)
+        {
+            var nameKey = NormalizeProductName(ingredient.Name);
+            if (string.IsNullOrWhiteSpace(nameKey))
+            {
+                continue;
+            }
+
+            names.TryAdd(nameKey, ingredient.Name.Trim());
+            var amount = ParseAmount(ingredient.Amount);
+            if (!amount.IsKnown)
+            {
+                if (!fallbackNeeds.TryGetValue(nameKey, out var rawAmounts))
+                {
+                    rawAmounts = new List<string>();
+                    fallbackNeeds[nameKey] = rawAmounts;
+                }
+
+                rawAmounts.Add(string.IsNullOrWhiteSpace(ingredient.Amount) ? "по вкусу" : ingredient.Amount.Trim());
+                continue;
+            }
+
+            var key = $"{nameKey}|{amount.UnitGroup}";
+            if (needs.TryGetValue(key, out var need))
+            {
+                need.Amount = need.Amount with { BaseValue = need.Amount.BaseValue + amount.BaseValue };
+            }
+            else
+            {
+                needs[key] = new ShoppingNeed(nameKey, ingredient.Name.Trim(), amount);
+            }
+        }
+
+        foreach (var fallback in fallbackNeeds)
+        {
+            if (needs.Keys.Any(key => key.StartsWith($"{fallback.Key}|", StringComparison.Ordinal)))
+            {
+                continue;
+            }
+
+            needs[$"{fallback.Key}|raw"] = new ShoppingNeed(
+                fallback.Key,
+                names.GetValueOrDefault(fallback.Key, fallback.Key),
+                new ParsedAmount(false, fallback.Value.Count, "raw", "раз", 1, string.Join(", ", fallback.Value)));
+        }
+
+        return needs.Values.ToList();
+    }
+
+    private static ParsedAmount ParseAmount(string amountText)
+    {
+        var text = amountText.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return ParsedAmount.Unknown(text);
+        }
+
+        var match = Regex.Match(text, @"(?<value>\d+(?:[,.]\d+)?)\s*(?<unit>[а-яё. ]*)", RegexOptions.IgnoreCase);
+        if (!match.Success || !decimal.TryParse(match.Groups["value"].Value.Replace(',', '.'), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        {
+            return ParsedAmount.Unknown(text);
+        }
+
+        var unit = NormalizeUnit(match.Groups["unit"].Value);
+        if (unit is null)
+        {
+            return ParsedAmount.Unknown(text);
+        }
+
+        return new ParsedAmount(true, value * unit.Value.Factor, unit.Value.Group, unit.Value.DisplayUnit, unit.Value.Factor, text);
+    }
+
+    private static (string Group, string DisplayUnit, decimal Factor)? NormalizeUnit(string unitText)
+    {
+        var unit = Regex.Replace(unitText.Trim().ToLowerInvariant(), @"\s+", " ").Trim('.', ' ');
+
+        if (unit is "" or "шт" or "штука" or "штуки" or "штук")
+        {
+            return ("piece", "шт.", 1m);
+        }
+
+        if (unit is "г" or "гр" or "грамм" or "грамма" or "граммов")
+        {
+            return ("mass", "г", 1m);
+        }
+
+        if (unit is "кг" or "килограмм" or "килограмма" or "килограммов")
+        {
+            return ("mass", "кг", 1000m);
+        }
+
+        if (unit is "мл" or "миллилитр" or "миллилитра" or "миллилитров")
+        {
+            return ("volume", "мл", 1m);
+        }
+
+        if (unit is "л" or "литр" or "литра" or "литров")
+        {
+            return ("volume", "л", 1000m);
+        }
+
+        if (unit is "ч. л" or "ч л" or "чайная ложка" or "чайные ложки")
+        {
+            return ("teaspoon", "ч. л.", 1m);
+        }
+
+        if (unit is "ст. л" or "ст л" or "столовая ложка" or "столовые ложки")
+        {
+            return ("tablespoon", "ст. л.", 1m);
+        }
+
+        if (unit is "уп" or "упаковка" or "упаковки")
+        {
+            return ("pack", "уп.", 1m);
+        }
+
+        return null;
+    }
+
+    private static string NormalizeProductName(string name)
+    {
+        var normalized = Regex.Replace(name.Trim().ToLowerInvariant(), @"\s+", " ");
+        normalized = normalized.Trim('.', ',', ';', ':', '-', ' ');
+
+        return ProductNameAliases.TryGetValue(normalized, out var alias)
+            ? alias
+            : normalized;
+    }
+
+    private static readonly Dictionary<string, string> ProductNameAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["картошка"] = "картофель",
+        ["картошки"] = "картофель",
+        ["картофеля"] = "картофель",
+        ["помидор"] = "томаты",
+        ["помидоры"] = "томаты",
+        ["помидоров"] = "томаты",
+        ["томат"] = "томаты",
+        ["томата"] = "томаты",
+        ["яйца"] = "яйцо",
+        ["яиц"] = "яйцо",
+        ["луковица"] = "лук",
+        ["луковицы"] = "лук",
+        ["морковка"] = "морковь",
+        ["морковки"] = "морковь",
+        ["шампиньон"] = "грибы",
+        ["шампиньоны"] = "грибы",
+        ["гриб"] = "грибы",
+        ["чеснока"] = "чеснок",
+        ["зубчик чеснока"] = "чеснок",
+        ["зубчики чеснока"] = "чеснок",
+        ["зелень"] = "зелень",
+        ["зелени"] = "зелень"
+    };
+
+    private static string FormatAmount(decimal missingBaseValue, ParsedAmount original)
+    {
+        if (!original.IsKnown)
+        {
+            return original.RawText;
+        }
+
+        if (original.UnitGroup == "mass" && original.DisplayUnit == "г" && missingBaseValue >= 1000)
+        {
+            return $"{FormatDecimal(missingBaseValue / 1000m)} кг";
+        }
+
+        if (original.UnitGroup == "volume" && original.DisplayUnit == "мл" && missingBaseValue >= 1000)
+        {
+            return $"{FormatDecimal(missingBaseValue / 1000m)} л";
+        }
+
+        return $"{FormatDecimal(missingBaseValue / original.DisplayFactor)} {original.DisplayUnit}";
+    }
+
+    private static string FormatDecimal(decimal value)
+    {
+        return value % 1 == 0
+            ? value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+            : value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',');
+    }
+
+    private static void AddShoppingItem(SqlConnection connection, int userId, string name, string quantity)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO dbo.ShoppingItems (UserId, Name, Quantity, IsBought) VALUES (@userId, @name, @quantity, 0)";
+        command.Parameters.AddWithValue("@userId", userId);
+        command.Parameters.AddWithValue("@name", name.Trim());
+        command.Parameters.AddWithValue("@quantity", quantity.Trim());
         command.ExecuteNonQuery();
     }
 
@@ -919,6 +1212,23 @@ public static partial class Database
         clearCommand.CommandText = "DELETE FROM dbo.ShoppingItems WHERE UserId = @userId";
         clearCommand.Parameters.AddWithValue("@userId", userId);
         clearCommand.ExecuteNonQuery();
+    }
+
+    private sealed record IngredientAmount(string Name, string Amount);
+
+    private sealed record ShoppingNeed(string NameKey, string DisplayName, ParsedAmount Amount)
+    {
+        public ParsedAmount Amount { get; set; } = Amount;
+    }
+
+    private sealed record ParsedAmount(bool IsKnown, decimal BaseValue, string UnitGroup, string DisplayUnit, decimal DisplayFactor, string RawText)
+    {
+        public static ParsedAmount Unknown(string rawText) => new(false, 0, "raw", string.Empty, 1, rawText);
+
+        public bool CanCompareWith(ParsedAmount other)
+        {
+            return IsKnown && other.IsKnown && UnitGroup == other.UnitGroup;
+        }
     }
 
     public static List<StatItem> GetCategoryStats() => GetCategoryStats(null);
@@ -1091,6 +1401,182 @@ public static partial class Database
             Scalar("SELECT COUNT(*) FROM dbo.Products WHERE UserId = @userId"));
     }
 
+    public static List<UserRecipeSummary> GetUserRecipes(int userId)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT r.Id,
+                   r.Title,
+                   c.Name,
+                   ISNULL(r.Status, N'Published'),
+                   ISNULL(r.CreatedAt, SYSUTCDATETIME()),
+                   ISNULL(r.ModerationComment, N'')
+            FROM dbo.Recipes r
+            JOIN dbo.Categories c ON c.Id = r.CategoryId
+            WHERE r.UserId = @userId
+            ORDER BY r.CreatedAt DESC, r.Title
+            """;
+        command.Parameters.AddWithValue("@userId", userId);
+
+        using var reader = command.ExecuteReader();
+        var recipes = new List<UserRecipeSummary>();
+        while (reader.Read())
+        {
+            recipes.Add(new UserRecipeSummary(
+                reader.GetInt32(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetDateTime(4).ToLocalTime(),
+                reader.GetString(5)));
+        }
+
+        return recipes;
+    }
+
+    public static List<RecipeModerationItem> GetPendingRecipes()
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT r.Id,
+                   r.Title,
+                   r.Description,
+                   c.Name,
+                   ISNULL(u.Email, N'неизвестно'),
+                   ISNULL(r.CreatedAt, SYSUTCDATETIME())
+            FROM dbo.Recipes r
+            JOIN dbo.Categories c ON c.Id = r.CategoryId
+            LEFT JOIN dbo.Users u ON u.Id = r.UserId
+            WHERE ISNULL(r.Status, N'Published') = N'Pending'
+            ORDER BY r.CreatedAt ASC, r.Title
+            """;
+
+        using var reader = command.ExecuteReader();
+        var recipes = new List<RecipeModerationItem>();
+        while (reader.Read())
+        {
+            recipes.Add(new RecipeModerationItem(
+                reader.GetInt32(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetDateTime(5).ToLocalTime()));
+        }
+
+        return recipes;
+    }
+
+    public static List<AdminRecipeItem> GetAdminRecipes()
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT r.Id,
+                   r.Title,
+                   c.Name,
+                   ISNULL(u.Email, N'системный рецепт'),
+                   ISNULL(r.Status, N'Published'),
+                   ISNULL(r.CreatedAt, SYSUTCDATETIME())
+            FROM dbo.Recipes r
+            JOIN dbo.Categories c ON c.Id = r.CategoryId
+            LEFT JOIN dbo.Users u ON u.Id = r.UserId
+            ORDER BY
+                CASE ISNULL(r.Status, N'Published')
+                    WHEN N'Pending' THEN 0
+                    WHEN N'Published' THEN 1
+                    WHEN N'Rejected' THEN 2
+                    ELSE 3
+                END,
+                ISNULL(r.CreatedAt, SYSUTCDATETIME()) DESC,
+                r.Title
+            """;
+
+        using var reader = command.ExecuteReader();
+        var recipes = new List<AdminRecipeItem>();
+        while (reader.Read())
+        {
+            recipes.Add(new AdminRecipeItem(
+                reader.GetInt32(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetDateTime(5).ToLocalTime()));
+        }
+
+        return recipes;
+    }
+
+    public static void DeleteRecipe(int recipeId)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM dbo.Recipes WHERE Id = @recipeId";
+        command.Parameters.AddWithValue("@recipeId", recipeId);
+        command.ExecuteNonQuery();
+    }
+
+    public static void PublishRecipe(int recipeId)
+    {
+        UpdateRecipeModerationStatus(recipeId, "Published", string.Empty);
+        AddRecipeToAuthorFavorites(recipeId);
+        EnsureInitialStats();
+    }
+
+    public static void RejectRecipe(int recipeId, string comment)
+    {
+        UpdateRecipeModerationStatus(recipeId, "Rejected", string.IsNullOrWhiteSpace(comment)
+            ? "Рецепт отклонён администратором."
+            : comment.Trim());
+    }
+
+    private static void UpdateRecipeModerationStatus(int recipeId, string status, string comment)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE dbo.Recipes
+            SET Status = @status,
+                ModerationComment = @comment
+            WHERE Id = @recipeId
+              AND UserId IS NOT NULL
+            """;
+        command.Parameters.AddWithValue("@recipeId", recipeId);
+        command.Parameters.AddWithValue("@status", status);
+        command.Parameters.AddWithValue("@comment", comment);
+        command.ExecuteNonQuery();
+    }
+
+    private static void AddRecipeToAuthorFavorites(int recipeId)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DECLARE @authorId INT = (
+                SELECT UserId
+                FROM dbo.Recipes
+                WHERE Id = @recipeId
+                  AND UserId IS NOT NULL
+            );
+
+            IF @authorId IS NOT NULL
+               AND NOT EXISTS (
+                   SELECT 1
+                   FROM dbo.Favorites
+                   WHERE UserId = @authorId AND RecipeId = @recipeId
+               )
+            BEGIN
+                INSERT INTO dbo.Favorites (UserId, RecipeId, CreatedAt)
+                VALUES (@authorId, @recipeId, SYSUTCDATETIME());
+            END
+            """;
+        command.Parameters.AddWithValue("@recipeId", recipeId);
+        command.ExecuteNonQuery();
+    }
+
     private static SqlConnection OpenConnection()
     {
         return DbConnectionFactory.OpenConnection();
@@ -1106,6 +1592,17 @@ public static partial class Database
     {
         EnsureColumn(connection, "Recipes", "ImageUrl", "NVARCHAR(600) NOT NULL DEFAULT N''");
         EnsureColumn(connection, "Recipes", "Difficulty", "NVARCHAR(60) NOT NULL DEFAULT N'Лёгкий'");
+        EnsureColumn(connection, "Recipes", "Status", "NVARCHAR(40) NOT NULL DEFAULT N'Published'");
+        EnsureColumn(connection, "Recipes", "ModerationComment", "NVARCHAR(500) NOT NULL DEFAULT N''");
+        EnsureColumn(connection, "Recipes", "CreatedAt", "DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()");
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE dbo.Recipes
+            SET Status = N'Published'
+            WHERE Status IS NULL OR Status = N'';
+            """;
+        command.ExecuteNonQuery();
     }
 
     private static void EnsureProductColumns(SqlConnection connection)
@@ -1158,7 +1655,8 @@ public static partial class Database
             reader.GetInt32(5),
             reader.GetString(6),
             reader.GetString(7),
-            reader.GetString(8));
+            reader.GetString(8),
+            reader.GetString(9));
     }
 
     private static void Seed()
@@ -1379,7 +1877,8 @@ public static partial class Database
                 UPDATE dbo.Recipes
                 SET Instructions = @instructions,
                     ImageUrl = CASE WHEN @imageUrl = N'' THEN ImageUrl ELSE @imageUrl END,
-                    Difficulty = @difficulty
+                    Difficulty = @difficulty,
+                    Status = N'Published'
                 WHERE Title = @title
                   AND UserId IS NULL
                 """;

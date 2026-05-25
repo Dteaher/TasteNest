@@ -1,0 +1,41 @@
+<mxfile host="app.diagrams.net" modified="2026-05-22T00:00:00.000Z" agent="TasteNest Codex" version="24.7.17">
+  <diagram id="usecase" name="Use Case">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Диаграмма вариантов использования TasteNest" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;align=left;" vertex="1" parent="1"><mxGeometry x="40" y="25" width="600" height="40" as="geometry" /></mxCell>
+        <mxCell id="system" value="TasteNest" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=16;fontStyle=1;verticalAlign=top;spacingTop=12;" vertex="1" parent="1"><mxGeometry x="250" y="90" width="900" height="720" as="geometry" /></mxCell>
+        <mxCell id="user" value="Пользователь" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;fontSize=14;" vertex="1" parent="1"><mxGeometry x="70" y="210" width="70" height="130" as="geometry" /></mxCell>
+        <mxCell id="operator" value="Оператор" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;fontSize=14;" vertex="1" parent="1"><mxGeometry x="70" y="500" width="70" height="130" as="geometry" /></mxCell>
+        <mxCell id="admin" value="Администратор" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;fontSize=14;" vertex="1" parent="1"><mxGeometry x="1230" y="350" width="80" height="140" as="geometry" /></mxCell>
+        <mxCell id="uc1" value="Регистрация" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="330" y="140" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc2" value="Авторизация" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="600" y="140" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc3" value="Поиск рецептов" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="880" y="140" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc4" value="Просмотр рецепта" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="465" y="260" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc5" value="Ведение продуктов" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="740" y="260" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc6" value="Управление избранным" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="330" y="390" width="220" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc7" value="Планирование питания" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="610" y="390" width="220" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc8" value="Формирование списка покупок" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="890" y="390" width="220" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc9" value="Просмотр статистики" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="360" y="560" width="220" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc10" value="Проверка данных пользователей" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="660" y="560" width="250" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc11" value="Управление пользователями и ролями" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="520" y="690" width="280" height="60" as="geometry" /></mxCell>
+        <mxCell id="uc12" value="Управление сервером SQL Server" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" vertex="1" parent="1"><mxGeometry x="840" y="690" width="260" height="60" as="geometry" /></mxCell>
+        <mxCell id="a1" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a2" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a3" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a4" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a5" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a6" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc7"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a7" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc8"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a8" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="uc9"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a9" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="operator" target="uc10"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a10" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="operator" target="uc9"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a11" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="admin" target="uc11"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a12" style="endArrow=none;html=1;strokeColor=#000000;" edge="1" parent="1" source="admin" target="uc12"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="i1" value="include" style="endArrow=open;dashed=1;html=1;strokeColor=#000000;fontSize=12;" edge="1" parent="1" source="uc3" target="uc4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="i2" value="include" style="endArrow=open;dashed=1;html=1;strokeColor=#000000;fontSize=12;" edge="1" parent="1" source="uc7" target="uc8"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
