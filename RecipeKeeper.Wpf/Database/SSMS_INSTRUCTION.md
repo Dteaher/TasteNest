@@ -1,39 +1,46 @@
-# Как открыть базу RecipeKeeper в SQL Server Management Studio
+# Как открыть базу TasteNest в SQL Server Management Studio
 
 1. Открой `SQL Server Management Studio`.
-2. Подключись к своему SQL Server.
-3. Нажми `File -> Open -> File`.
-4. Выбери файл:
+2. Подключись к своему SQL Server, например:
 
 ```text
-D:\Users\Admin\Documents\New project\RecipeKeeper.Wpf\Database\RecipeKeeper.sqlserver.sql
+localhost\SQLEXPRESS
 ```
 
-5. Нажми `Execute` / `Выполнить`.
-6. В Object Explorer появится база:
-
-```text
-RecipeKeeperDb
-```
-
-7. Открой:
+3. В `Object Explorer` открой:
 
 ```text
 Databases -> RecipeKeeperDb -> Tables
 ```
 
-Там будут таблицы:
+4. Чтобы посмотреть данные таблицы:
+   - нажми правой кнопкой по таблице;
+   - выбери `Select Top 1000 Rows` / `Выбрать первые 1000 строк`.
 
-- `Users`
-- `Categories`
-- `Recipes`
-- `Ingredients`
-- `Products`
-- `Favorites`
-- `RecipeViews`
-- `MealPlan`
-- `ShoppingItems`
-- `RecipeStats`
+Основные таблицы:
 
-Важно: WPF-приложение пока продолжает работать через SQLite, чтобы не ломать текущий запуск.
-Этот SQL Server скрипт нужен для просмотра и демонстрации базы в SSMS.
+- `dbo.Users`
+- `dbo.Categories`
+- `dbo.Recipes`
+- `dbo.Ingredients`
+- `dbo.Products`
+- `dbo.Favorites`
+- `dbo.RecipeViews`
+- `dbo.MealPlan`
+- `dbo.ShoppingItems`
+- `dbo.RecipeStats`
+- `dbo.UserRecipeStats`
+
+Если базу нужно создать заново через SSMS:
+
+1. Нажми `File -> Open -> File`.
+2. Выбери файл:
+
+```text
+D:\Users\Admin\Documents\New project\RecipeKeeper.Wpf\Database\RecipeKeeper.sqlserver.sql
+```
+
+3. Нажми `Execute` / `Выполнить`.
+4. Обнови список баз данных.
+
+WPF-приложение работает с этой же SQL Server базой через `Microsoft.Data.SqlClient`.

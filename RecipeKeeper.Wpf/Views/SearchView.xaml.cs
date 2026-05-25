@@ -11,8 +11,8 @@ public partial class SearchView : UserControl
 {
     private const string SortNewest = "Сначала новые";
     private const string SortOldest = "Сначала старые";
-    private const string SortTitleAsc = "По названию А–Я";
-    private const string SortTitleDesc = "По названию Я–А";
+    private const string SortTitleAsc = "По названию А-Я";
+    private const string SortTitleDesc = "По названию Я-А";
     private const string SortFastest = "Сначала быстрые";
     private const string SortSlowest = "Сначала долгие";
 
@@ -24,7 +24,7 @@ public partial class SearchView : UserControl
     private bool _compactLayout;
     private bool _isReady;
     private string _globalQuery = string.Empty;
-    private RecipeViewMode _viewMode = RecipeViewMode.List;
+    private RecipeViewMode _viewMode = RecipeViewMode.Grid;
 
     public SearchView()
     {
@@ -239,11 +239,16 @@ public partial class SearchView : UserControl
         {
             Style = (Style)FindResource("RecipeCard"),
             Width = GetGridItemWidth(),
-            MinHeight = 0,
-            Margin = new Thickness(0, 0, 14, 14)
+            MinHeight = 380,
+            Margin = new Thickness(0, 0, 16, 16)
         };
 
-        var content = new StackPanel();
+        var content = new Grid();
+        content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        content.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
         var imageBorder = new Border
         {
@@ -261,7 +266,7 @@ public partial class SearchView : UserControl
         imageBorder.Child = image;
         content.Children.Add(imageBorder);
 
-        content.Children.Add(new TextBlock
+        var title = new TextBlock
         {
             Text = recipe.Title,
             FontSize = 18,
@@ -269,22 +274,29 @@ public partial class SearchView : UserControl
             Foreground = (Brush)FindResource("TextBrush"),
             TextWrapping = TextWrapping.Wrap,
             MaxHeight = 48
-        });
+        };
+        Grid.SetRow(title, 1);
+        content.Children.Add(title);
 
-        content.Children.Add(new TextBlock
+        var description = new TextBlock
         {
             Text = recipe.Description,
             Style = (Style)FindResource("MutedText"),
             FontSize = 14,
             Margin = new Thickness(0, 6, 0, 10),
-            MaxHeight = 42
-        });
+            TextWrapping = TextWrapping.Wrap,
+            MaxHeight = 44
+        };
+        Grid.SetRow(description, 2);
+        content.Children.Add(description);
 
         var badges = new WrapPanel { Margin = new Thickness(0, 0, 0, 12) };
         badges.Children.Add(CreateBadge($"{recipe.CookingTime} мин", "SecondaryButtonBrush", "TextBrush"));
         badges.Children.Add(CreateBadge(recipe.Category, "AccentLightBrush", "AccentBrush"));
+        Grid.SetRow(badges, 3);
         content.Children.Add(badges);
 
+        var actions = new StackPanel();
         var openButton = new Button
         {
             Content = "Открыть",
@@ -293,7 +305,7 @@ public partial class SearchView : UserControl
             Margin = new Thickness(0, 0, 0, 8)
         };
         openButton.Click += (_, _) => OpenRecipeRequested?.Invoke(recipe.Id);
-        content.Children.Add(openButton);
+        actions.Children.Add(openButton);
 
         var favoriteButton = new Button
         {
@@ -303,7 +315,9 @@ public partial class SearchView : UserControl
             Margin = new Thickness(0)
         };
         favoriteButton.Click += (_, _) => Database.ToggleFavorite(User.Id, recipe.Id);
-        content.Children.Add(favoriteButton);
+        actions.Children.Add(favoriteButton);
+        Grid.SetRow(actions, 4);
+        content.Children.Add(actions);
 
         card.Child = content;
         return card;
@@ -364,6 +378,7 @@ public partial class SearchView : UserControl
         var emptyState = new Border
         {
             Style = (Style)FindResource("EmptyState"),
+            Width = _viewMode == RecipeViewMode.Grid ? Math.Max(280, GetGridContainerWidth()) : double.NaN,
             Child = new StackPanel
             {
                 Children =
@@ -410,15 +425,32 @@ public partial class SearchView : UserControl
 
     private static string Normalize(string value) => value.Trim().ToLowerInvariant();
 
-    private double GetGridItemWidth()
+    private double GetGridContainerWidth()
     {
-        var available = ResultsCard.ActualWidth - 64;
-        if (available <= 0)
+        var width = RecipesGridPanel.ActualWidth;
+        if (width > 0)
         {
-            return 306;
+            return width;
         }
 
-        return Math.Max(280, Math.Min(306, available));
+        width = ResultsCard.ActualWidth - ResultsCard.Padding.Left - ResultsCard.Padding.Right;
+        return width > 0 ? width : 320;
+    }
+
+    private double GetGridItemWidth()
+    {
+        var available = GetGridContainerWidth();
+        const double gap = 16;
+
+        var columns = available switch
+        {
+            >= 1180 => 4,
+            >= 880 => 3,
+            >= 580 => 2,
+            _ => 1
+        };
+
+        return Math.Max(260, Math.Floor((available - gap * (columns - 1)) / columns) - 1);
     }
 
     private void UpdateGridItemWidth()
@@ -429,11 +461,16 @@ public partial class SearchView : UserControl
         }
 
         var width = GetGridItemWidth();
-        RecipesGridPanel.ItemWidth = width + 14;
+        RecipesGridPanel.ItemWidth = width + 16;
         foreach (var item in RecipesGridPanel.Children.OfType<Border>())
         {
             item.Width = width;
         }
+    }
+
+    private void RecipesGridPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateGridItemWidth();
     }
 
     private void SearchView_SizeChanged(object sender, SizeChangedEventArgs e)

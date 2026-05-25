@@ -66,73 +66,65 @@
                     Padding="24"
                     CornerRadius="18"
                     VerticalAlignment="Stretch">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,20">
+                        <TextBlock Text="&#x1F343;"
+                                   DockPanel.Dock="Right"
+                                   FontSize="22"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="Фильтры"
+                                   Style="{StaticResource PageTitle}"
+                                   Margin="0"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
 
-                    <StackPanel>
-                        <DockPanel Margin="0,0,0,20">
-                            <TextBlock Text="&#x1F343;"
-                                       DockPanel.Dock="Right"
-                                       FontSize="22"
-                                       Foreground="{StaticResource AccentBrush}"
-                                       VerticalAlignment="Center" />
-                            <TextBlock Text="Фильтры"
-                                       Style="{StaticResource PageTitle}"
-                                       Margin="0"
-                                       VerticalAlignment="Center" />
-                        </DockPanel>
-
-                        <StackPanel Style="{StaticResource FilterGroup}">
-                            <TextBlock Text="Поиск по названию" Style="{StaticResource FilterLabel}" />
-                            <TextBox x:Name="SearchTextBox"
-                                     Style="{StaticResource FilterTextBox}"
-                                     Tag="Введите название рецепта..."
-                                     TextChanged="FilterInput_Changed" />
-                        </StackPanel>
-
-                        <StackPanel Style="{StaticResource FilterGroup}">
-                            <TextBlock Text="Категория" Style="{StaticResource FilterLabel}" />
-                            <ComboBox x:Name="CategoryComboBox"
-                                      Style="{StaticResource FilterComboBox}"
-                                      SelectionChanged="FilterInput_Changed">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Style="{StaticResource FilterGroup}">
-                            <TextBlock Text="Ингредиенты" Style="{StaticResource FilterLabel}" />
-                            <TextBox x:Name="TagsTextBox"
-                                     Style="{StaticResource FilterTextBox}"
-                                     Tag="Введите ингредиент..."
-                                     TextChanged="FilterInput_Changed" />
-                            <TextBlock Text="Например: курица, рис, томаты"
-                                       Style="{StaticResource MutedText}"
-                                       FontSize="13"
-                                       Margin="0,8,0,0" />
-                        </StackPanel>
-
-                        <Button Content="Показать рецепты"
-                                Style="{StaticResource PrimaryButton}"
-                                Click="ShowButton_Click"
-                                HorizontalAlignment="Stretch"
-                                MinHeight="48"
-                                Margin="0,2,0,10" />
-                        <Button Content="Очистить фильтры"
-                                Style="{StaticResource SecondaryButton}"
-                                Click="ClearButton_Click"
-                                HorizontalAlignment="Stretch"
-                                MinHeight="46"
-                                Margin="0" />
+                    <StackPanel Style="{StaticResource FilterGroup}">
+                        <TextBlock Text="Поиск по названию" Style="{StaticResource FilterLabel}" />
+                        <TextBox x:Name="SearchTextBox"
+                                 Style="{StaticResource FilterTextBox}"
+                                 Tag="Введите название рецепта..."
+                                 TextChanged="FilterInput_Changed" />
                     </StackPanel>
 
-                </Grid>
+                    <StackPanel Style="{StaticResource FilterGroup}">
+                        <TextBlock Text="Категория" Style="{StaticResource FilterLabel}" />
+                        <ComboBox x:Name="CategoryComboBox"
+                                  Style="{StaticResource FilterComboBox}"
+                                  SelectionChanged="FilterInput_Changed">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Style="{StaticResource FilterGroup}">
+                        <TextBlock Text="Ингредиенты" Style="{StaticResource FilterLabel}" />
+                        <TextBox x:Name="TagsTextBox"
+                                 Style="{StaticResource FilterTextBox}"
+                                 Tag="Введите ингредиент..."
+                                 TextChanged="FilterInput_Changed" />
+                        <TextBlock Text="Например: курица, рис, томаты"
+                                   Style="{StaticResource MutedText}"
+                                   FontSize="13"
+                                   Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <Button Content="Показать рецепты"
+                            Style="{StaticResource PrimaryButton}"
+                            Click="ShowButton_Click"
+                            HorizontalAlignment="Stretch"
+                            MinHeight="48"
+                            Margin="0,2,0,10" />
+                    <Button Content="Очистить фильтры"
+                            Style="{StaticResource SecondaryButton}"
+                            Click="ClearButton_Click"
+                            HorizontalAlignment="Stretch"
+                            MinHeight="46"
+                            Margin="0" />
+                </StackPanel>
             </Border>
 
             <Border x:Name="ResultsCard"
@@ -206,7 +198,8 @@
                         <WrapPanel x:Name="RecipesGridPanel"
                                    Visibility="Collapsed"
                                    HorizontalAlignment="Stretch"
-                                   ItemWidth="320" />
+                                   ItemWidth="320"
+                                   SizeChanged="RecipesGridPanel_SizeChanged" />
                     </Grid>
                 </DockPanel>
             </Border>

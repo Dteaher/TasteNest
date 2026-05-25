@@ -29,6 +29,12 @@ public partial class AddRecipeView : UserControl
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(IngredientsTextBox.Text) || string.IsNullOrWhiteSpace(InstructionsTextBox.Text))
+        {
+            StatusTextBlock.Text = "Добавьте ингредиенты и шаги приготовления.";
+            return;
+        }
+
         Database.AddRecipeExtended(
             User.Id,
             TitleTextBox.Text,
@@ -41,7 +47,9 @@ public partial class AddRecipeView : UserControl
             ImageTextBox.Text,
             IngredientsTextBox.Text);
 
-        StatusTextBlock.Text = "Рецепт сохранён.";
+        StatusTextBlock.Text = User.Role == "Admin"
+            ? "Рецепт опубликован."
+            : "Рецепт отправлен администратору на проверку.";
         Clear();
     }
 
@@ -56,5 +64,6 @@ public partial class AddRecipeView : UserControl
         IngredientsTextBox.Text = string.Empty;
         TimeTextBox.Text = "30";
         ServingsTextBox.Text = "2";
+        DifficultyComboBox.SelectedIndex = 0;
     }
 }

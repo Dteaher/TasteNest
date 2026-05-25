@@ -48,6 +48,9 @@ CREATE TABLE dbo.Recipes
     UserId INT NULL,
     ImageUrl NVARCHAR(700) NOT NULL CONSTRAINT DF_Recipes_ImageUrl DEFAULT N'',
     Difficulty NVARCHAR(40) NOT NULL CONSTRAINT DF_Recipes_Difficulty DEFAULT N'Лёгкий',
+    Status NVARCHAR(40) NOT NULL CONSTRAINT DF_Recipes_Status DEFAULT N'Published',
+    ModerationComment NVARCHAR(500) NOT NULL CONSTRAINT DF_Recipes_ModerationComment DEFAULT N'',
+    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Recipes_CreatedAt DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_Recipes_Categories FOREIGN KEY (CategoryId) REFERENCES dbo.Categories(Id),
     CONSTRAINT FK_Recipes_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
 );
@@ -131,6 +134,7 @@ CREATE TABLE dbo.RecipeStats
 GO
 
 CREATE INDEX IX_Recipes_CategoryId ON dbo.Recipes(CategoryId);
+CREATE INDEX IX_Recipes_Status ON dbo.Recipes(Status);
 CREATE INDEX IX_Ingredients_RecipeId ON dbo.Ingredients(RecipeId);
 CREATE INDEX IX_Products_UserId_Name ON dbo.Products(UserId, Name);
 CREATE INDEX IX_RecipeViews_UserId_ViewedAt ON dbo.RecipeViews(UserId, ViewedAt DESC);
