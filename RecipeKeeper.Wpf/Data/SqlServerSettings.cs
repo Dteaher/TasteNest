@@ -16,9 +16,28 @@ public sealed class SqlServerSettings
     public bool CreateSqlLoginForClients { get; set; } = true;
 
     public static string FilePath => Path.Combine(AppContext.BaseDirectory, "TasteNest.settings.json");
+    public static string ClientFilePath => Path.Combine(AppContext.BaseDirectory, "TasteNest.client.settings.json");
 
     public static SqlServerSettings Load()
     {
+        var clientSettings = TryLoad(ClientFilePath);
+        var appSettings = TryLoad(FilePath);
+
+        if (clientSettings is not null && clientSettings.UseSqlLogin && IsDefaultLocalSettings(appSettings))
+        {
+            return clientSettings;
+        }
+
+        if (appSettings is not null)
+        {
+            return appSettings;
+        }
+
+        if (clientSettings is not null)
+        {
+            return clientSettings;
+        }
+
         if (!File.Exists(FilePath))
         {
             var settings = new SqlServerSettings();
@@ -26,17 +45,34 @@ public sealed class SqlServerSettings
             return settings;
         }
 
+        var fallback = new SqlServerSettings();
+        fallback.Save();
+        return fallback;
+    }
+
+    private static SqlServerSettings? TryLoad(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
         try
         {
-            return JsonSerializer.Deserialize<SqlServerSettings>(File.ReadAllText(FilePath), SerializerOptions())
-                ?? new SqlServerSettings();
+            return JsonSerializer.Deserialize<SqlServerSettings>(File.ReadAllText(path), SerializerOptions());
         }
         catch
         {
-            var settings = new SqlServerSettings();
-            settings.Save();
-            return settings;
+            return null;
         }
+    }
+
+    private static bool IsDefaultLocalSettings(SqlServerSettings? settings)
+    {
+        return settings is null
+            || (!settings.UseSqlLogin
+                && string.Equals(settings.ServerName, @"localhost\SQLEXPRESS", StringComparison.OrdinalIgnoreCase)
+                && settings.CreateSqlLoginForClients);
     }
 
     public void Save()
