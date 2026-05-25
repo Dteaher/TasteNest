@@ -1,42 +1,27 @@
-# База данных TasteNest
+# База данных RecipeKeeper
 
-Проект использует SQL Server / SQL Server Express. База открывается и просматривается через SQL Server Management Studio.
+Приложение использует SQLite как SQL-базу без установки отдельного сервера.
 
-Основная база:
-
-```text
-RecipeKeeperDb
-```
-
-Основной SQL-скрипт для SSMS:
+Файл базы создаётся при запуске:
 
 ```text
-RecipeKeeper.Wpf\Database\RecipeKeeper.sqlserver.sql
+RecipeKeeper.Wpf\bin\Debug\net8.0-windows\recipes_wpf.db
 ```
 
-Подключение из WPF-приложения выполняется через:
+Строка подключения вынесена в:
 
 ```text
-RecipeKeeper.Wpf\Data\DbConnectionFactory.cs
-RecipeKeeper.Wpf\Data\ConnectObject.cs
+Data\DbConnectionFactory.cs
 ```
 
-Пакет подключения:
+Класс подключения по аналогии с методичкой:
 
 ```text
-Microsoft.Data.SqlClient
+Data\ConnectObject.cs
 ```
 
-Основные таблицы:
+SQL-структура базы отдельно описана в:
 
-- `dbo.Users`
-- `dbo.Categories`
-- `dbo.Recipes`
-- `dbo.Ingredients`
-- `dbo.Products`
-- `dbo.Favorites`
-- `dbo.RecipeViews`
-- `dbo.MealPlan`
-- `dbo.ShoppingItems`
-- `dbo.RecipeStats`
-- `dbo.UserRecipeStats`
+```text
+Database\RecipeKeeper.sqlite.sql
+```

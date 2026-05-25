@@ -1,15 +1,12 @@
 # TasteNest
 
-TasteNest — настольное WPF-приложение на C# для рецептов, продуктов, избранного, планирования питания, списка покупок и статистики пользователя.
+TasteNest — WPF-приложение на C# для поиска рецептов, ведения продуктов, избранного, плана питания, списка покупок и пользовательской статистики.
 
 ## Стек
 
 - C# / WPF / .NET 8
-- SQL Server / SQL Server Express
-- SQL Server Management Studio
+- SQL Server Express / SQL Server
 - Microsoft.Data.SqlClient
-- T-SQL
-- Git / GitHub
 
 ## Структура проекта
 
@@ -18,8 +15,8 @@ RecipeKeeper.Wpf/
 ├─ Assets/          изображения, иконки и фото рецептов
 ├─ Configuration/   пример локальных настроек подключения
 ├─ Data/            модели, авторизация, работа с SQL Server
-├─ Database/        SQL Server скрипты и инструкции для базы
-├─ Deployment/      файлы для настройки серверной и клиентской версии
+├─ Database/        SQL-скрипты и инструкции для БД
+├─ Deployment/      материалы для серверной настройки
 ├─ Pages/           основные страницы приложения
 ├─ Ui/              общие UI-поведения
 └─ Views/           пользовательские экраны и карточки
@@ -27,10 +24,10 @@ RecipeKeeper.Wpf/
 
 ## Запуск из Visual Studio
 
-1. Открой `RecipeKeeper.Wpf.slnx`.
-2. Выбери проект `RecipeKeeper.Wpf`.
-3. Убедись, что установлен workload Visual Studio `.NET desktop development`.
-4. Запусти проект кнопкой `Start`.
+1. Откройте `RecipeKeeper.Wpf.slnx`.
+2. Выберите проект `RecipeKeeper.Wpf`.
+3. Убедитесь, что установлен workload Visual Studio `.NET desktop development`.
+4. Запустите проект кнопкой `Start`.
 
 ## Запуск через терминал
 
@@ -39,45 +36,39 @@ dotnet build .\RecipeKeeper.Wpf\RecipeKeeper.Wpf.csproj
 dotnet run --project .\RecipeKeeper.Wpf\RecipeKeeper.Wpf.csproj
 ```
 
-## База данных
+## Настройки базы данных
 
-Текущая версия использует SQL Server базу:
+Реальные настройки подключения не хранятся в репозитории.
 
-```text
-RecipeKeeperDb
-```
-
-Основной скрипт для SQL Server Management Studio:
+Для локального запуска используйте пример:
 
 ```text
-RecipeKeeper.Wpf\Database\RecipeKeeper.sqlserver.sql
+RecipeKeeper.Wpf/Configuration/TasteNest.settings.example.json
 ```
 
-Настройки подключения лежат рядом с exe в файлах:
+При необходимости скопируйте его в выходную папку приложения как:
 
 ```text
 TasteNest.settings.json
-TasteNest.client.settings.json
 ```
 
-Примеры настроек:
+Для клиентской сборки используйте пример:
 
 ```text
-RecipeKeeper.Wpf\Configuration\TasteNest.settings.example.json
-RecipeKeeper.Wpf\Deployment\TasteNest.client.settings.example.json
+RecipeKeeper.Wpf/Deployment/TasteNest.client.settings.example.json
 ```
 
 ## Стартовые аккаунты
 
-При создании тестовой базы приложение добавляет:
+При создании базы приложение добавляет:
 
 - `admin / admin` — администратор
 - `operator / operator` — оператор
 - `user / user` — пользователь
 
-## Что не хранится в репозитории
+## Что не хранится в проекте
 
 - `.vs`, `bin`, `obj`
 - опубликованные сборки вроде `TasteNest_User_Version`
-- реальные локальные `TasteNest.settings.json`
-- временные файлы и локальные базы данных
+- реальные `TasteNest.settings.json`
+- локальные базы данных и временные файлы

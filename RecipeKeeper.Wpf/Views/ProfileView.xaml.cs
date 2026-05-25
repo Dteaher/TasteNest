@@ -1,12 +1,13 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using RecipeKeeper.Wpf.Data;
 
 namespace RecipeKeeper.Wpf.Views;
 
 public partial class ProfileView : UserControl
 {
+    private Recipe? _recipeOfDay;
+
     public event Action<string>? NavigateRequested;
     public event Action<int>? OpenRecipeRequested;
 
@@ -14,12 +15,15 @@ public partial class ProfileView : UserControl
     {
         InitializeComponent();
         RenderProfile();
-        RenderUserRecipes();
+        RenderInsights();
     }
 
     private void RenderProfile()
     {
         UserTextBlock.Text = User.Email;
+        OperatorPanelQuickButton.Visibility = User.Role == "Operator"
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         RoleTextBlock.Text = $"Роль: {User.Role}";
 
         var summary = Database.GetProfileSummary(User.Id);
@@ -33,125 +37,93 @@ public partial class ProfileView : UserControl
             ? "0 записей"
             : $"{history.Count} записей";
         HistoryListBox.ItemsSource = history.Count == 0
-            ? new[] { new RecipeActivity(0, "Вы пока не открывали рецепты", DateTime.Now) }
+            ? new[] { new RecipeActivity("Вы пока не открывали рецепты", DateTime.Now) }
             : history;
     }
 
-    private void RenderUserRecipes()
+    private void RenderInsights()
     {
-        var recipes = Database.GetUserRecipes(User.Id);
-        MyRecipesPanel.Children.Clear();
+        RenderExpiryInsight();
+        RenderCookNowInsight();
+        RenderShoppingInsight();
+        RenderRecipeOfDay();
+    }
 
-        if (recipes.Count == 0)
+    private void RenderExpiryInsight()
+    {
+        var products = Database.GetProducts(User.Id);
+        var expired = products.Where(product => product.ExpiresAt.HasValue && product.ExpiresAt.Value.Date < DateTime.Today).ToList();
+        var soon = products.Where(product => product.ExpiresAt.HasValue && product.ExpiresAt.Value.Date >= DateTime.Today && product.ExpiresAt.Value.Date <= DateTime.Today.AddDays(3)).ToList();
+
+        if (products.Count == 0)
         {
-            MyRecipesPanel.Children.Add(new TextBlock
-            {
-                Text = "Вы пока не добавляли свои рецепты.",
-                Style = (Style)FindResource("MutedText")
-            });
+            ExpirySummaryText.Text = "У вас пока нет добавленных продуктов.";
+            ExpiryItemsControl.ItemsSource = new[] { "Добавьте продукты, чтобы видеть сроки." };
             return;
         }
 
-        foreach (var recipe in recipes)
-        {
-            MyRecipesPanel.Children.Add(CreateRecipeRow(recipe));
-        }
+        ExpirySummaryText.Text = expired.Count == 0 && soon.Count == 0
+            ? "Все продукты выглядят свежими."
+            : $"Скоро истекают: {soon.Count}. Просрочены: {expired.Count}.";
+
+        ExpiryItemsControl.ItemsSource = soon
+            .Concat(expired)
+            .OrderBy(product => product.ExpiresAt)
+            .Take(3)
+            .Select(product => $"{product.Name} — до {product.ExpiresAt:dd.MM.yyyy}")
+            .DefaultIfEmpty("Критичных сроков нет.")
+            .ToList();
     }
 
-    private Border CreateRecipeRow(UserRecipeSummary recipe)
+    private void RenderCookNowInsight()
     {
-        var root = new Border
-        {
-            BorderBrush = (Brush)FindResource("BorderBrushSoft"),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(14),
-            Margin = new Thickness(0, 0, 0, 10),
-            Background = Brushes.White
-        };
+        var products = Database.GetProducts(User.Id);
+        var productNames = products.Select(product => product.Name).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct().ToList();
 
-        var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-        var info = new StackPanel();
-        info.Children.Add(new TextBlock
+        if (productNames.Count < 2)
         {
-            Text = recipe.Title,
-            FontWeight = FontWeights.Bold,
-            FontSize = 16,
-            TextWrapping = TextWrapping.Wrap
-        });
-        info.Children.Add(new TextBlock
-        {
-            Text = $"{recipe.Category} · создано {recipe.CreatedAt:dd.MM.yyyy}",
-            Style = (Style)FindResource("MutedText"),
-            Margin = new Thickness(0, 4, 0, 0)
-        });
-
-        if (!string.IsNullOrWhiteSpace(recipe.ModerationComment))
-        {
-            info.Children.Add(new TextBlock
-            {
-                Text = recipe.ModerationComment,
-                Style = (Style)FindResource("MutedText"),
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 6, 0, 0)
-            });
+            CookNowSummaryText.Text = "Добавьте больше продуктов, и мы подберём рецепты.";
+            CookNowItemsControl.ItemsSource = new[] { "Минимум 2 продукта для хорошей подсказки." };
+            return;
         }
 
-        var status = new Border
-        {
-            Style = (Style)FindResource("StatusBadge"),
-            Background = GetStatusBrush(recipe.Status),
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(14, 0, 0, 0)
-        };
-        status.Child = new TextBlock
-        {
-            Text = GetStatusText(recipe.Status),
-            FontWeight = FontWeights.SemiBold,
-            Foreground = GetStatusForeground(recipe.Status)
-        };
-
-        Grid.SetColumn(info, 0);
-        Grid.SetColumn(status, 1);
-        grid.Children.Add(info);
-        grid.Children.Add(status);
-        root.Child = grid;
-
-        if (recipe.Status == "Published")
-        {
-            root.Cursor = System.Windows.Input.Cursors.Hand;
-            root.MouseLeftButtonUp += (_, _) => OpenRecipeRequested?.Invoke(recipe.Id);
-        }
-
-        return root;
+        var recipes = Database.SearchRecipes(string.Empty, null, productNames);
+        CookNowSummaryText.Text = $"Найдено рецептов по вашим продуктам: {recipes.Count}.";
+        CookNowItemsControl.ItemsSource = recipes.Take(3).Select(recipe => recipe.Title).DefaultIfEmpty("Пока нет совпадений.").ToList();
     }
 
-    private static string GetStatusText(string status) => status switch
+    private void RenderShoppingInsight()
     {
-        "Pending" => "на проверке",
-        "Published" => "опубликован",
-        "Rejected" => "отклонён",
-        _ => status
-    };
+        var items = Database.GetShoppingItems(User.Id);
+        var notBought = items.Where(item => !item.IsBought).ToList();
 
-    private static Brush GetStatusBrush(string status) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(status switch
-    {
-        "Pending" => "#FFF3D5",
-        "Published" => "#E7EFEA",
-        "Rejected" => "#F7E7E4",
-        _ => "#EEEAE0"
-    }));
+        if (items.Count == 0)
+        {
+            ShoppingSummaryText.Text = "Список покупок пуст.";
+            ShoppingItemsControl.ItemsSource = new[] { "Сформируйте список из избранных рецептов." };
+            return;
+        }
 
-    private static Brush GetStatusForeground(string status) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(status switch
+        ShoppingSummaryText.Text = $"В списке покупок {items.Count} позиций, не куплено: {notBought.Count}.";
+        ShoppingItemsControl.ItemsSource = notBought.Take(3).Select(item => $"{item.Name} — {item.Quantity}").DefaultIfEmpty("Все товары отмечены купленными.").ToList();
+    }
+
+    private void RenderRecipeOfDay()
     {
-        "Pending" => "#8A5A00",
-        "Published" => "#1F614D",
-        "Rejected" => "#8C2B21",
-        _ => "#5D5A50"
-    }));
+        _recipeOfDay = Database.GetFavoriteRecipes(User.Id).FirstOrDefault()
+            ?? Database.GetPopularRecipes().FirstOrDefault()
+            ?? Database.SearchRecipes(string.Empty, null, Array.Empty<string>()).FirstOrDefault();
+
+        if (_recipeOfDay is null)
+        {
+            RecipeOfDayTitleText.Text = "Рецептов пока нет";
+            RecipeOfDaySummaryText.Text = "Добавьте первый рецепт, чтобы получать рекомендации.";
+            return;
+        }
+
+        RecipeOfDayTitleText.Text = _recipeOfDay.Title;
+        RecipeOfDaySummaryText.Text = $"{_recipeOfDay.Category} · {_recipeOfDay.CookingTime} мин · {_recipeOfDay.Description}";
+    }
 
     private void InsightNavigate_Click(object sender, RoutedEventArgs e)
     {
@@ -161,18 +133,11 @@ public partial class ProfileView : UserControl
         }
     }
 
-    private void HistoryListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void RecipeOfDayButton_Click(object sender, RoutedEventArgs e)
     {
-        if (HistoryListBox.SelectedItem is not RecipeActivity activity)
+        if (_recipeOfDay is not null)
         {
-            return;
-        }
-
-        HistoryListBox.SelectedItem = null;
-
-        if (activity.RecipeId > 0)
-        {
-            OpenRecipeRequested?.Invoke(activity.RecipeId);
+            OpenRecipeRequested?.Invoke(_recipeOfDay.Id);
         }
     }
 }

@@ -6,10 +6,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <Border Style="{StaticResource PageCard}" Margin="0,0,0,16">
@@ -21,9 +18,8 @@
 
                     <StackPanel>
                         <TextBlock Text="Центр управления TasteNest" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Администратор управляет пользователями, ролями, сервером и публикацией пользовательских рецептов."
-                                   Style="{StaticResource MutedText}"
-                                   TextWrapping="Wrap" />
+                        <TextBlock Text="Администратор управляет ролями, доступом и общей структурой системы."
+                                   Style="{StaticResource MutedText}" />
                     </StackPanel>
 
                     <Border Grid.Column="1" Background="#E9F3ED" CornerRadius="14" Padding="16,10" VerticalAlignment="Center">
@@ -53,42 +49,41 @@
                 </Border>
                 <Border Style="{StaticResource SummaryCard}">
                     <StackPanel>
-                        <TextBlock Text="На модерации" Style="{StaticResource MutedText}" />
-                        <TextBlock x:Name="PendingRecipesCountText" FontSize="26" FontWeight="Bold" />
+                        <TextBlock Text="Заблокированы" Style="{StaticResource MutedText}" />
+                        <TextBlock x:Name="BlockedUsersText" FontSize="26" FontWeight="Bold" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
-            <Grid Grid.Row="2" Margin="0,0,0,16">
+            <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MinWidth="520" />
-                    <ColumnDefinition Width="340" MinWidth="310" />
+                    <ColumnDefinition Width="320" MinWidth="300" />
                 </Grid.ColumnDefinitions>
 
                 <Border Style="{StaticResource PageCard}" Margin="0,0,18,0">
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                            <TextBlock Text="Пользователи" Style="{StaticResource PageTitle}" />
-                            <TextBlock Text="Роли выдаёт только администратор. Главный администратор защищён от блокировки и смены роли."
-                                       Style="{StaticResource MutedText}"
-                                       TextWrapping="Wrap" />
+                            <TextBlock Text="Реестр пользователей" Style="{StaticResource PageTitle}" />
+                            <TextBlock Text="Полный список аккаунтов. Только администратор может менять роли."
+                                       Style="{StaticResource MutedText}" />
                         </StackPanel>
 
                         <DataGrid x:Name="UsersGrid"
                                   Style="{StaticResource StyledDataGrid}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
-                                  MinHeight="380"
+                                  MinHeight="440"
                                   SelectionChanged="UsersGrid_SelectionChanged">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="55" />
-                                <DataGridTextColumn Header="Пользователь" Binding="{Binding Email}" Width="2*" MinWidth="170" />
-                                <DataGridTextColumn Header="Роль" Binding="{Binding Role}" Width="*" MinWidth="95" />
+                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60" />
+                                <DataGridTextColumn Header="Пользователь" Binding="{Binding Email}" Width="2*" MinWidth="180" />
+                                <DataGridTextColumn Header="Роль" Binding="{Binding Role}" Width="*" MinWidth="100" />
                                 <DataGridCheckBoxColumn Header="Активен" Binding="{Binding IsActive}" Width="90" />
-                                <DataGridTextColumn Header="Рецепты" Binding="{Binding RecipesCount}" Width="90" />
-                                <DataGridTextColumn Header="Избранное" Binding="{Binding FavoritesCount}" Width="100" />
-                                <DataGridTextColumn Header="Просмотры" Binding="{Binding ViewsCount}" Width="100" />
-                                <DataGridTextColumn Header="Продукты" Binding="{Binding ProductsCount}" Width="90" />
+                                <DataGridTextColumn Header="Рецепты" Binding="{Binding RecipesCount}" Width="*" MinWidth="82" />
+                                <DataGridTextColumn Header="Избранное" Binding="{Binding FavoritesCount}" Width="*" MinWidth="96" />
+                                <DataGridTextColumn Header="Просмотры" Binding="{Binding ViewsCount}" Width="*" MinWidth="96" />
+                                <DataGridTextColumn Header="Продукты" Binding="{Binding ProductsCount}" Width="*" MinWidth="90" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
@@ -97,7 +92,44 @@
                 <StackPanel Grid.Column="1">
                     <Border Style="{StaticResource PageCard}" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="Действия с пользователем" Style="{StaticResource PageTitle}" />
+                            <TextBlock Text="Общая статистика" FontSize="20" FontWeight="Bold" />
+                            <TextBlock Text="Сводка по всему TasteNest для администратора."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,6,0,14" />
+
+                            <UniformGrid Columns="2">
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Рецепты" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalRecipesText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Продукты" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalProductsText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Просмотры" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalViewsText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Приготовлено" Style="{StaticResource MutedText}" />
+                                        <TextBlock x:Name="GlobalCookText" FontSize="24" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource PageCard}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Управление ролью" Style="{StaticResource PageTitle}" />
                             <Border Background="#F7F5ED" CornerRadius="8" Padding="12" Margin="0,0,0,12">
                                 <StackPanel>
                                     <TextBlock x:Name="SelectedUserNameText" Text="Пользователь не выбран" FontWeight="Bold" TextWrapping="Wrap" />
@@ -105,17 +137,33 @@
                                 </StackPanel>
                             </Border>
 
-                            <TextBlock Text="Назначить роль" Style="{StaticResource LabelText}" />
+                            <TextBlock Text="Новая роль" Style="{StaticResource LabelText}" />
                             <ComboBox x:Name="RoleComboBox" />
                             <Button Content="Сохранить роль" Style="{StaticResource PrimaryButton}" Click="ApplyRole_Click" />
-                            <Button x:Name="ToggleStatusButton" Content="Заблокировать / разблокировать" Click="ToggleStatus_Click" />
-                            <Button Content="Обновить список" Click="RefreshButton_Click" />
+                            <Button x:Name="ToggleStatusButton" Content="Блокировка аккаунта" Click="ToggleStatus_Click" />
+                            <Button Content="Обновить реестр" Click="RefreshButton_Click" />
+
+                            <TextBlock x:Name="StatusTextBlock" Style="{StaticResource MutedText}" Margin="0,12,0,0" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource PageCard}">
                         <StackPanel>
-                            <TextBlock Text="SQL Server" FontSize="20" FontWeight="Bold" />
+                            <TextBlock Text="Правила администратора" FontSize="20" FontWeight="Bold" />
+                            <TextBlock Text="Admin в системе один: admin/admin. Его нельзя заблокировать, удалить или понизить."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0" />
+                            <TextBlock Text="Админ назначает только User или Operator, чтобы структура ролей оставалась понятной для защиты проекта."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource PageCard}" Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Сервер SQL" FontSize="20" FontWeight="Bold" />
                             <TextBlock Text="Управление службой SQL Server Express на этом компьютере."
                                        Style="{StaticResource MutedText}"
                                        TextWrapping="Wrap"
@@ -131,72 +179,16 @@
                             <Button Content="Обновить статус" Click="RefreshServerStatus_Click" />
                             <Button Content="Включить сервер" Style="{StaticResource PrimaryButton}" Click="StartServer_Click" />
                             <Button Content="Выключить сервер" Style="{StaticResource DangerButton}" Click="StopServer_Click" />
+
+                            <TextBlock Text="При запуске и остановке Windows может запросить права администратора."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,10,0,0" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </Grid>
-
-            <Border Grid.Row="3" Style="{StaticResource PageCard}" Margin="0,0,0,16">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                        <TextBlock Text="Модерация рецептов" Style="{StaticResource PageTitle}" />
-                        <TextBlock Text="Рецепты, созданные пользователями, появляются здесь. После публикации они становятся видны всем в поиске."
-                                   Style="{StaticResource MutedText}"
-                                   TextWrapping="Wrap" />
-                    </StackPanel>
-
-                    <StackPanel x:Name="PendingRecipesPanel" />
-                </DockPanel>
-            </Border>
-
-            <Border Grid.Row="4" Style="{StaticResource PageCard}">
-                <DockPanel>
-                    <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel>
-                            <TextBlock Text="Все рецепты" Style="{StaticResource PageTitle}" />
-                            <TextBlock Text="Здесь администратор может удалить лишний, ошибочный или устаревший рецепт."
-                                       Style="{StaticResource MutedText}"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="Обновить" Click="RefreshRecipesButton_Click" Margin="0,0,10,0" />
-                            <Button x:Name="DeleteSelectedRecipeButton"
-                                    Content="Удалить выбранный рецепт"
-                                    Style="{StaticResource DangerButton}"
-                                    IsEnabled="False"
-                                    Click="DeleteSelectedRecipe_Click" />
-                        </StackPanel>
-                    </Grid>
-
-                    <DataGrid x:Name="AdminRecipesGrid"
-                              Style="{StaticResource StyledDataGrid}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              MinHeight="320"
-                              SelectionChanged="AdminRecipesGrid_SelectionChanged">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="55" />
-                            <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="2*" MinWidth="220" />
-                            <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="*" MinWidth="140" />
-                            <DataGridTextColumn Header="Автор" Binding="{Binding AuthorEmail}" Width="*" MinWidth="170" />
-                            <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="120" />
-                            <DataGridTextColumn Header="Создан" Binding="{Binding CreatedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="150" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </DockPanel>
-            </Border>
-
-            <TextBlock Grid.Row="5"
-                       x:Name="StatusTextBlock"
-                       Style="{StaticResource MutedText}"
-                       Margin="0,12,0,0"
-                       TextWrapping="Wrap" />
         </Grid>
     </ScrollViewer>
 </UserControl>
+
