@@ -123,6 +123,12 @@ BEGIN
     SET @sql = N'ALTER ROLE db_datawriter ADD MEMBER ' + QUOTENAME(@LoginNameLocal) + N';';
     EXEC (@sql);
 END;
+
+IF IS_ROLEMEMBER(N'db_ddladmin', @LoginNameLocal) <> 1
+BEGIN
+    SET @sql = N'ALTER ROLE db_ddladmin ADD MEMBER ' + QUOTENAME(@LoginNameLocal) + N';';
+    EXEC (@sql);
+END;
 "@
 
 $dbCommand = $dbConnection.CreateCommand()

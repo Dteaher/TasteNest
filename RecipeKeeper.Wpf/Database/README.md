@@ -18,7 +18,6 @@ RecipeKeeper.Wpf\Database\RecipeKeeper.sqlserver.sql
 
 ```text
 RecipeKeeper.Wpf\Data\DbConnectionFactory.cs
-RecipeKeeper.Wpf\Data\ConnectObject.cs
 ```
 
 Пакет подключения:
@@ -40,3 +39,5 @@ Microsoft.Data.SqlClient
 - `dbo.ShoppingItems`
 - `dbo.RecipeStats`
 - `dbo.UserRecipeStats`
+- `dbo.OperatorUserNotes`
+- `dbo.OperatorActionLog`

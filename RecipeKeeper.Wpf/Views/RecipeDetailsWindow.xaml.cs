@@ -1,13 +1,11 @@
-using System.IO;
 using System.Windows;
-using System.Windows.Media.Imaging;
 using RecipeKeeper.Wpf.Data;
+using RecipeKeeper.Wpf.Ui;
 
 namespace RecipeKeeper.Wpf.Views;
 
 public partial class RecipeDetailsWindow : Window
 {
-    private const string FallbackImage = "Assets/Recipes/recipe-placeholder.jpg";
     private readonly Recipe _recipe;
 
     public RecipeDetailsWindow(int recipeId)
@@ -30,44 +28,7 @@ public partial class RecipeDetailsWindow : Window
         InstructionsTextBlock.Text = _recipe.Instructions;
         IngredientsListBox.ItemsSource = Database.GetIngredients(_recipe.Id).Select(x => $"{x.Name} - {x.Amount}");
         FavoriteButton.Content = Database.IsFavorite(User.Id, _recipe.Id) ? "Убрать из избранного" : "Добавить в избранное";
-        RecipeImage.Source = LoadImage(_recipe.ImageUrl);
-    }
-
-    private static BitmapImage? LoadImage(string imagePath)
-    {
-        var resolvedPath = ResolveImagePath(string.IsNullOrWhiteSpace(imagePath) ? FallbackImage : imagePath);
-        if (resolvedPath is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.UriSource = resolvedPath;
-            image.EndInit();
-            image.Freeze();
-            return image;
-        }
-        catch
-        {
-            return imagePath == FallbackImage ? null : LoadImage(FallbackImage);
-        }
-    }
-
-    private static Uri? ResolveImagePath(string imagePath)
-    {
-        if (Uri.TryCreate(imagePath, UriKind.Absolute, out var absoluteUri))
-        {
-            return absoluteUri;
-        }
-
-        var localPath = Path.Combine(AppContext.BaseDirectory, imagePath.Replace('/', Path.DirectorySeparatorChar));
-        return File.Exists(localPath)
-            ? new Uri(localPath, UriKind.Absolute)
-            : null;
+        RecipeImage.Source = RecipeImageLoader.Load(_recipe.ImageUrl);
     }
 
     private void FavoriteButton_Click(object sender, RoutedEventArgs e)

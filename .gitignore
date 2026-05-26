@@ -11,6 +11,9 @@ Release/
 *.suo
 *.cache
 *.log
+*.pdb
+TasteNest_User_Version*.zip
+TasteNest_User_Version*.rar
 
 app.db
 app.db-shm

@@ -118,6 +118,9 @@ public static class DbConnectionFactory
 
             IF IS_ROLEMEMBER(N'db_datawriter', N'{settings.SqlUser.Replace("'", "''")}') <> 1
                 ALTER ROLE db_datawriter ADD MEMBER [{settings.SqlUser.Replace("]", "]]")}];
+
+            IF IS_ROLEMEMBER(N'db_ddladmin', N'{settings.SqlUser.Replace("'", "''")}') <> 1
+                ALTER ROLE db_ddladmin ADD MEMBER [{settings.SqlUser.Replace("]", "]]")}];
             """;
         userCommand.ExecuteNonQuery();
     }

@@ -2,6 +2,12 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="clr-namespace:RecipeKeeper.Wpf.Ui">
+    <UserControl.Resources>
+        <Style x:Key="FormSection" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,0,14" />
+        </Style>
+    </UserControl.Resources>
+
     <ScrollViewer VerticalScrollBarVisibility="Hidden"
                   HorizontalScrollBarVisibility="Disabled"
                   CanContentScroll="False"
@@ -23,70 +29,85 @@
             </Border>
 
             <Border Grid.Row="1" Style="{StaticResource PageCard}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="190" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                <StackPanel>
+                    <StackPanel Style="{StaticResource FormSection}">
+                        <TextBlock Text="Название" Style="{StaticResource LabelText}" />
+                        <TextBox x:Name="TitleTextBox"
+                                 HorizontalAlignment="Stretch"
+                                 HorizontalContentAlignment="Left"
+                                 TextAlignment="Left" />
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="0" Text="Название" Style="{StaticResource LabelText}" />
-                    <TextBox x:Name="TitleTextBox" Grid.Row="0" Grid.Column="1" />
+                    <StackPanel Style="{StaticResource FormSection}">
+                        <TextBlock Text="Категория" Style="{StaticResource LabelText}" />
+                        <ComboBox x:Name="CategoryComboBox"
+                                  DisplayMemberPath="Name"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left" />
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="1" Text="Категория" Style="{StaticResource LabelText}" />
-                    <ComboBox x:Name="CategoryComboBox" Grid.Row="1" Grid.Column="1" DisplayMemberPath="Name" />
+                    <StackPanel Style="{StaticResource FormSection}">
+                        <TextBlock Text="Описание" Style="{StaticResource LabelText}" />
+                        <TextBox x:Name="DescriptionTextBox"
+                                 Style="{StaticResource TasteNestMultilineTextBoxStyle}"
+                                 MinHeight="86"
+                                 HorizontalAlignment="Stretch"
+                                 TextAlignment="Left"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="2" Text="Описание" Style="{StaticResource LabelText}" />
-                    <TextBox x:Name="DescriptionTextBox"
-                             Grid.Row="2"
-                             Grid.Column="1"
-                             Height="86"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    <StackPanel Style="{StaticResource FormSection}">
+                        <TextBlock Text="Параметры" Style="{StaticResource LabelText}" />
+                        <WrapPanel>
+                            <TextBox x:Name="TimeTextBox"
+                                     Width="130"
+                                     Text="30"
+                                     HorizontalContentAlignment="Left"
+                                     TextAlignment="Left"
+                                     ToolTip="Время приготовления, мин" />
+                            <TextBox x:Name="ServingsTextBox"
+                                     Width="130"
+                                     Text="2"
+                                     HorizontalContentAlignment="Left"
+                                     TextAlignment="Left"
+                                     ToolTip="Количество порций" />
+                            <ComboBox x:Name="DifficultyComboBox"
+                                      Width="170"
+                                      HorizontalContentAlignment="Left" />
+                        </WrapPanel>
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="3" Text="Параметры" Style="{StaticResource LabelText}" />
-                    <WrapPanel Grid.Row="3" Grid.Column="1">
-                        <TextBox x:Name="TimeTextBox" Width="130" Text="30" ToolTip="Время приготовления, мин" />
-                        <TextBox x:Name="ServingsTextBox" Width="130" Text="2" ToolTip="Количество порций" />
-                        <ComboBox x:Name="DifficultyComboBox" Width="170" />
-                    </WrapPanel>
+                    <StackPanel Style="{StaticResource FormSection}">
+                        <TextBlock Text="Фото / путь" Style="{StaticResource LabelText}" />
+                        <TextBox x:Name="ImageTextBox"
+                                 HorizontalAlignment="Stretch"
+                                 HorizontalContentAlignment="Left"
+                                 TextAlignment="Left"
+                                 ToolTip="Можно оставить пустым. Тогда будет использована заглушка." />
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="4" Text="Фото / путь" Style="{StaticResource LabelText}" />
-                    <TextBox x:Name="ImageTextBox"
-                             Grid.Row="4"
-                             Grid.Column="1"
-                             ToolTip="Можно оставить пустым. Тогда будет использована заглушка." />
+                    <StackPanel Style="{StaticResource FormSection}">
+                        <TextBlock Text="Ингредиенты" Style="{StaticResource LabelText}" />
+                        <TextBox x:Name="IngredientsTextBox"
+                                 Style="{StaticResource TasteNestMultilineTextBoxStyle}"
+                                 MinHeight="135"
+                                 HorizontalAlignment="Stretch"
+                                 TextAlignment="Left"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 Text="картофель - 800 г&#x0a;курица - 500 г" />
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="5" Text="Ингредиенты" Style="{StaticResource LabelText}" />
-                    <TextBox x:Name="IngredientsTextBox"
-                             Grid.Row="5"
-                             Grid.Column="1"
-                             Height="135"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             Text="картофель - 800 г&#x0a;курица - 500 г" />
+                    <StackPanel Style="{StaticResource FormSection}">
+                        <TextBlock Text="Шаги" Style="{StaticResource LabelText}" />
+                        <TextBox x:Name="InstructionsTextBox"
+                                 Style="{StaticResource TasteNestMultilineTextBoxStyle}"
+                                 MinHeight="155"
+                                 HorizontalAlignment="Stretch"
+                                 TextAlignment="Left"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                    </StackPanel>
 
-                    <TextBlock Grid.Row="6" Text="Шаги" Style="{StaticResource LabelText}" />
-                    <TextBox x:Name="InstructionsTextBox"
-                             Grid.Row="6"
-                             Grid.Column="1"
-                             Height="155"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
-
-                    <Grid Grid.Row="7" Grid.Column="1" Margin="0,8,0,0">
+                    <Grid Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
@@ -106,7 +127,7 @@
                                    Margin="12,0,0,0"
                                    TextWrapping="Wrap" />
                     </Grid>
-                </Grid>
+                </StackPanel>
             </Border>
         </Grid>
     </ScrollViewer>

@@ -8,8 +8,13 @@ public sealed record ShoppingItem(int Id, string Name, string Quantity, bool IsB
 public sealed record MealPlanItem(string DayName, string RecipeTitle);
 public sealed record StatItem(string Name, int Count);
 public sealed record ProfileSummary(int RecipesCount, int FavoritesCount, int ViewsCount, int ProductsCount);
-public sealed record ManagedUser(int Id, string Email, string Role, bool IsActive, int RecipesCount, int FavoritesCount, int ViewsCount, int ProductsCount);
+public sealed record ManagedUser(int Id, string Email, string Role, bool IsActive, int RecipesCount, int FavoritesCount, int ViewsCount, int ProductsCount, DateTime CreatedAt, DateTime? LastLoginAt);
 public sealed record OperatorQueueItem(int UserId, string Email, string Issue, string Priority, string Detail, bool CanBlock);
+public sealed record OperatorUserRow(int Id, string Email, string Role, bool IsActive, DateTime CreatedAt, int RecipesCount, int ViewsCount, int ProductsCount, DateTime? LastLoginAt, string Note)
+{
+    public string StatusText => IsActive ? "активен" : "заблокирован";
+}
+public sealed record OperatorActionLogItem(string OperatorEmail, string TargetEmail, DateTime CreatedAt, string Reason, string Comment, bool OldStatus, bool NewStatus);
 public sealed record AdminSystemSummary(int TotalUsers, int Admins, int Operators, int Users, int BlockedUsers, int Recipes, int Products, int Favorites, int Views, int CookCount);
 public sealed record StatisticsSummary(int RecipesCount, int FavoritesCount, int ProductsCount, int CookCount);
 public sealed record RecipePopularityStat(string Title, int CookCount, int Rating);

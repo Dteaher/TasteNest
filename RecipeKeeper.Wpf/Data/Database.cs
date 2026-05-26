@@ -25,7 +25,9 @@ public static partial class Database
                     Email NVARCHAR(255) NOT NULL UNIQUE,
                     PasswordHash NVARCHAR(128) NOT NULL,
                     Role NVARCHAR(40) NOT NULL DEFAULT N'User',
-                    Status BIT NOT NULL DEFAULT 1
+                    Status BIT NOT NULL DEFAULT 1,
+                    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                    LastLoginAt DATETIME2 NULL
                 );
             END;
 
@@ -158,6 +160,7 @@ public static partial class Database
         command.ExecuteNonQuery();
 
         EnsureUserColumns(connection);
+        EnsureOperatorTables(connection);
         EnsureRecipeColumns(connection);
         EnsureProductColumns(connection);
         Seed();
@@ -183,6 +186,7 @@ public static partial class Database
 
         EnsureUserRecipeStatsTable(connection);
         EnsureUserColumns(connection);
+        EnsureOperatorTables(connection);
         EnsureRecipeColumns(connection);
         EnsureProductColumns(connection);
         RepairSeedRecipeInstructions(connection);
@@ -202,9 +206,15 @@ public static partial class Database
         command.Parameters.AddWithValue("@password", HashPassword(password));
 
         using var reader = command.ExecuteReader();
-        return reader.Read()
-            ? (reader.GetInt32(0), reader.GetString(1), reader.GetString(2))
-            : null;
+        if (!reader.Read())
+        {
+            return null;
+        }
+
+        var user = (reader.GetInt32(0), reader.GetString(1), reader.GetString(2));
+        reader.Close();
+        UpdateLastLogin(user.Item1);
+        return user;
     }
 
     public static (int Id, string Email, string Role)? GetUserById(int userId)
@@ -252,6 +262,15 @@ public static partial class Database
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
 
+    private static void UpdateLastLogin(int userId)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE dbo.Users SET LastLoginAt = SYSUTCDATETIME() WHERE Id = @userId";
+        command.Parameters.AddWithValue("@userId", userId);
+        command.ExecuteNonQuery();
+    }
+
     public static List<ManagedUser> GetManagedUsers()
     {
         using var connection = OpenConnection();
@@ -265,7 +284,9 @@ public static partial class Database
                 (SELECT COUNT(*) FROM dbo.Recipes r WHERE r.UserId = u.Id) AS RecipesCount,
                 (SELECT COUNT(*) FROM dbo.Favorites f WHERE f.UserId = u.Id) AS FavoritesCount,
                 (SELECT COUNT(*) FROM dbo.RecipeViews v WHERE v.UserId = u.Id) AS ViewsCount,
-                (SELECT COUNT(*) FROM dbo.Products p WHERE p.UserId = u.Id) AS ProductsCount
+                (SELECT COUNT(*) FROM dbo.Products p WHERE p.UserId = u.Id) AS ProductsCount,
+                ISNULL(u.CreatedAt, SYSUTCDATETIME()),
+                u.LastLoginAt
             FROM dbo.Users u
             ORDER BY
                 CASE u.Role WHEN N'Admin' THEN 0 WHEN N'Operator' THEN 1 ELSE 2 END,
@@ -284,7 +305,9 @@ public static partial class Database
                 reader.GetInt32(4),
                 reader.GetInt32(5),
                 reader.GetInt32(6),
-                reader.GetInt32(7)));
+                reader.GetInt32(7),
+                reader.GetDateTime(8).ToLocalTime(),
+                reader.IsDBNull(9) ? null : reader.GetDateTime(9).ToLocalTime()));
         }
 
         return users;
@@ -329,6 +352,181 @@ public static partial class Database
         command.Parameters.AddWithValue("@status", isActive);
         command.Parameters.AddWithValue("@targetUserId", targetUserId);
         command.ExecuteNonQuery();
+    }
+
+    public static List<OperatorUserRow> GetOperatorUsers()
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                u.Id,
+                u.Email,
+                u.Role,
+                CAST(u.Status AS BIT),
+                ISNULL(u.CreatedAt, SYSUTCDATETIME()),
+                (SELECT COUNT(*) FROM dbo.Recipes r WHERE r.UserId = u.Id) AS RecipesCount,
+                (SELECT COUNT(*) FROM dbo.RecipeViews v WHERE v.UserId = u.Id) AS ViewsCount,
+                (SELECT COUNT(*) FROM dbo.Products p WHERE p.UserId = u.Id) AS ProductsCount,
+                u.LastLoginAt,
+                ISNULL(n.Note, N'')
+            FROM dbo.Users u
+            LEFT JOIN dbo.OperatorUserNotes n ON n.UserId = u.Id
+            WHERE u.Role = N'User'
+            ORDER BY u.Email
+            """;
+
+        using var reader = command.ExecuteReader();
+        var users = new List<OperatorUserRow>();
+        while (reader.Read())
+        {
+            users.Add(new OperatorUserRow(
+                reader.GetInt32(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetBoolean(3),
+                reader.GetDateTime(4).ToLocalTime(),
+                reader.GetInt32(5),
+                reader.GetInt32(6),
+                reader.GetInt32(7),
+                reader.IsDBNull(8) ? null : reader.GetDateTime(8).ToLocalTime(),
+                reader.GetString(9)));
+        }
+
+        return users;
+    }
+
+    public static void SaveOperatorNote(int operatorUserId, int targetUserId, string note)
+    {
+        EnsureTargetIsRegularUser(targetUserId);
+
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            IF EXISTS (SELECT 1 FROM dbo.OperatorUserNotes WHERE UserId = @targetUserId)
+            BEGIN
+                UPDATE dbo.OperatorUserNotes
+                SET Note = @note,
+                    UpdatedByUserId = @operatorUserId,
+                    UpdatedAt = SYSUTCDATETIME()
+                WHERE UserId = @targetUserId;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO dbo.OperatorUserNotes (UserId, Note, UpdatedByUserId, UpdatedAt)
+                VALUES (@targetUserId, @note, @operatorUserId, SYSUTCDATETIME());
+            END
+            """;
+        command.Parameters.AddWithValue("@targetUserId", targetUserId);
+        command.Parameters.AddWithValue("@operatorUserId", operatorUserId);
+        command.Parameters.AddWithValue("@note", note.Trim());
+        command.ExecuteNonQuery();
+    }
+
+    public static void SetUserStatusByOperator(int operatorUserId, int targetUserId, bool isActive, string reason, string comment)
+    {
+        var target = EnsureTargetIsRegularUser(targetUserId);
+        var oldStatus = target.IsActive;
+
+        using var connection = OpenConnection();
+        using var transaction = connection.BeginTransaction();
+
+        using var updateCommand = connection.CreateCommand();
+        updateCommand.Transaction = transaction;
+        updateCommand.CommandText = "UPDATE dbo.Users SET Status = @status WHERE Id = @targetUserId AND Role = N'User'";
+        updateCommand.Parameters.AddWithValue("@status", isActive);
+        updateCommand.Parameters.AddWithValue("@targetUserId", targetUserId);
+        updateCommand.ExecuteNonQuery();
+
+        using var logCommand = connection.CreateCommand();
+        logCommand.Transaction = transaction;
+        logCommand.CommandText = """
+            INSERT INTO dbo.OperatorActionLog (OperatorUserId, TargetUserId, CreatedAt, Reason, Comment, OldStatus, NewStatus)
+            VALUES (@operatorUserId, @targetUserId, SYSUTCDATETIME(), @reason, @comment, @oldStatus, @newStatus)
+            """;
+        logCommand.Parameters.AddWithValue("@operatorUserId", operatorUserId);
+        logCommand.Parameters.AddWithValue("@targetUserId", targetUserId);
+        logCommand.Parameters.AddWithValue("@reason", string.IsNullOrWhiteSpace(reason) ? "другое" : reason.Trim());
+        logCommand.Parameters.AddWithValue("@comment", comment.Trim());
+        logCommand.Parameters.AddWithValue("@oldStatus", oldStatus);
+        logCommand.Parameters.AddWithValue("@newStatus", isActive);
+        logCommand.ExecuteNonQuery();
+
+        transaction.Commit();
+    }
+
+    public static List<OperatorActionLogItem> GetOperatorActionLog()
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT TOP 80
+                ISNULL(o.Email, N'оператор'),
+                ISNULL(t.Email, N'пользователь'),
+                l.CreatedAt,
+                l.Reason,
+                l.Comment,
+                CAST(l.OldStatus AS BIT),
+                CAST(l.NewStatus AS BIT)
+            FROM dbo.OperatorActionLog l
+            LEFT JOIN dbo.Users o ON o.Id = l.OperatorUserId
+            LEFT JOIN dbo.Users t ON t.Id = l.TargetUserId
+            ORDER BY l.CreatedAt DESC
+            """;
+
+        using var reader = command.ExecuteReader();
+        var log = new List<OperatorActionLogItem>();
+        while (reader.Read())
+        {
+            log.Add(new OperatorActionLogItem(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetDateTime(2).ToLocalTime(),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetBoolean(5),
+                reader.GetBoolean(6)));
+        }
+
+        return log;
+    }
+
+    public static List<RecipeActivity> GetUserActivityForOperator(int targetUserId)
+    {
+        EnsureTargetIsRegularUser(targetUserId);
+
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT TOP 20 r.Id, r.Title, v.ViewedAt
+            FROM dbo.RecipeViews v
+            JOIN dbo.Recipes r ON r.Id = v.RecipeId
+            WHERE v.UserId = @targetUserId
+            ORDER BY v.ViewedAt DESC
+            """;
+        command.Parameters.AddWithValue("@targetUserId", targetUserId);
+
+        using var reader = command.ExecuteReader();
+        var activity = new List<RecipeActivity>();
+        while (reader.Read())
+        {
+            activity.Add(new RecipeActivity(reader.GetInt32(0), reader.GetString(1), reader.GetDateTime(2).ToLocalTime()));
+        }
+
+        return activity;
+    }
+
+    private static ManagedUser EnsureTargetIsRegularUser(int targetUserId)
+    {
+        var target = GetManagedUserById(targetUserId)
+            ?? throw new InvalidOperationException("Пользователь не найден.");
+
+        if (target.Role != "User")
+        {
+            throw new InvalidOperationException("Оператор может работать только с обычными пользователями.");
+        }
+
+        return target;
     }
 
     public static AdminSystemSummary GetAdminSystemSummary()
@@ -1586,6 +1784,43 @@ public static partial class Database
     {
         EnsureColumn(connection, "Users", "Role", "NVARCHAR(40) NOT NULL DEFAULT N'User'");
         EnsureColumn(connection, "Users", "Status", "BIT NOT NULL DEFAULT 1");
+        EnsureColumn(connection, "Users", "CreatedAt", "DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()");
+        EnsureColumn(connection, "Users", "LastLoginAt", "DATETIME2 NULL");
+    }
+
+    private static void EnsureOperatorTables(SqlConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            IF OBJECT_ID(N'dbo.OperatorUserNotes', N'U') IS NULL
+            BEGIN
+                CREATE TABLE dbo.OperatorUserNotes (
+                    UserId INT NOT NULL PRIMARY KEY,
+                    Note NVARCHAR(1000) NOT NULL DEFAULT N'',
+                    UpdatedByUserId INT NULL,
+                    UpdatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                    CONSTRAINT FK_OperatorUserNotes_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE,
+                    CONSTRAINT FK_OperatorUserNotes_Operators FOREIGN KEY (UpdatedByUserId) REFERENCES dbo.Users(Id)
+                );
+            END;
+
+            IF OBJECT_ID(N'dbo.OperatorActionLog', N'U') IS NULL
+            BEGIN
+                CREATE TABLE dbo.OperatorActionLog (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    OperatorUserId INT NULL,
+                    TargetUserId INT NOT NULL,
+                    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                    Reason NVARCHAR(120) NOT NULL,
+                    Comment NVARCHAR(1000) NOT NULL DEFAULT N'',
+                    OldStatus BIT NOT NULL,
+                    NewStatus BIT NOT NULL,
+                    CONSTRAINT FK_OperatorActionLog_Operators FOREIGN KEY (OperatorUserId) REFERENCES dbo.Users(Id),
+                    CONSTRAINT FK_OperatorActionLog_TargetUsers FOREIGN KEY (TargetUserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+                );
+            END;
+            """;
+        command.ExecuteNonQuery();
     }
 
     private static void EnsureRecipeColumns(SqlConnection connection)

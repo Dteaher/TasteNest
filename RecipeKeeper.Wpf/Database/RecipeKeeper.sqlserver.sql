@@ -8,6 +8,8 @@ USE RecipeKeeperDb;
 GO
 
 IF OBJECT_ID(N'dbo.RecipeStats', N'U') IS NOT NULL DROP TABLE dbo.RecipeStats;
+IF OBJECT_ID(N'dbo.OperatorActionLog', N'U') IS NOT NULL DROP TABLE dbo.OperatorActionLog;
+IF OBJECT_ID(N'dbo.OperatorUserNotes', N'U') IS NOT NULL DROP TABLE dbo.OperatorUserNotes;
 IF OBJECT_ID(N'dbo.ShoppingItems', N'U') IS NOT NULL DROP TABLE dbo.ShoppingItems;
 IF OBJECT_ID(N'dbo.MealPlan', N'U') IS NOT NULL DROP TABLE dbo.MealPlan;
 IF OBJECT_ID(N'dbo.RecipeViews', N'U') IS NOT NULL DROP TABLE dbo.RecipeViews;
@@ -25,7 +27,35 @@ CREATE TABLE dbo.Users
     Email NVARCHAR(256) NOT NULL CONSTRAINT UQ_Users_Email UNIQUE,
     PasswordHash NVARCHAR(128) NOT NULL,
     Role NVARCHAR(40) NOT NULL CONSTRAINT DF_Users_Role DEFAULT N'User',
-    Status INT NOT NULL CONSTRAINT DF_Users_Status DEFAULT 1
+    Status INT NOT NULL CONSTRAINT DF_Users_Status DEFAULT 1,
+    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Users_CreatedAt DEFAULT SYSUTCDATETIME(),
+    LastLoginAt DATETIME2 NULL
+);
+GO
+
+CREATE TABLE dbo.OperatorUserNotes
+(
+    UserId INT NOT NULL CONSTRAINT PK_OperatorUserNotes PRIMARY KEY,
+    Note NVARCHAR(1000) NOT NULL CONSTRAINT DF_OperatorUserNotes_Note DEFAULT N'',
+    UpdatedByUserId INT NULL,
+    UpdatedAt DATETIME2 NOT NULL CONSTRAINT DF_OperatorUserNotes_UpdatedAt DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_OperatorUserNotes_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_OperatorUserNotes_Operators FOREIGN KEY (UpdatedByUserId) REFERENCES dbo.Users(Id)
+);
+GO
+
+CREATE TABLE dbo.OperatorActionLog
+(
+    Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OperatorActionLog PRIMARY KEY,
+    OperatorUserId INT NULL,
+    TargetUserId INT NOT NULL,
+    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_OperatorActionLog_CreatedAt DEFAULT SYSUTCDATETIME(),
+    Reason NVARCHAR(120) NOT NULL,
+    Comment NVARCHAR(1000) NOT NULL CONSTRAINT DF_OperatorActionLog_Comment DEFAULT N'',
+    OldStatus BIT NOT NULL,
+    NewStatus BIT NOT NULL,
+    CONSTRAINT FK_OperatorActionLog_Operators FOREIGN KEY (OperatorUserId) REFERENCES dbo.Users(Id),
+    CONSTRAINT FK_OperatorActionLog_TargetUsers FOREIGN KEY (TargetUserId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
 );
 GO
 

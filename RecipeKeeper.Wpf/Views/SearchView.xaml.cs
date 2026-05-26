@@ -1,9 +1,8 @@
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using RecipeKeeper.Wpf.Data;
+using RecipeKeeper.Wpf.Ui;
 
 namespace RecipeKeeper.Wpf.Views;
 
@@ -256,7 +255,7 @@ public partial class SearchView : UserControl
         var image = new Image
         {
             Stretch = Stretch.UniformToFill,
-            Source = LoadRecipeImage(recipe.ImageUrl)
+            Source = RecipeImageLoader.Load(recipe.ImageUrl)
         };
         imageBorder.Child = image;
         content.Children.Add(imageBorder);
@@ -324,39 +323,6 @@ public partial class SearchView : UserControl
                 FontWeight = FontWeights.SemiBold
             }
         };
-    }
-
-    private ImageSource? LoadRecipeImage(string imageUrl)
-    {
-        var path = ResolveImagePath(imageUrl);
-        if (!File.Exists(path))
-        {
-            path = ResolveImagePath("Assets/Recipes/recipe-placeholder.jpg");
-        }
-
-        if (!File.Exists(path))
-        {
-            return null;
-        }
-
-        var image = new BitmapImage();
-        image.BeginInit();
-        image.CacheOption = BitmapCacheOption.OnLoad;
-        image.UriSource = new Uri(path, UriKind.Absolute);
-        image.EndInit();
-        return image;
-    }
-
-    private static string ResolveImagePath(string imageUrl)
-    {
-        if (string.IsNullOrWhiteSpace(imageUrl))
-        {
-            return string.Empty;
-        }
-
-        return Path.IsPathRooted(imageUrl)
-            ? imageUrl
-            : Path.Combine(AppContext.BaseDirectory, imageUrl.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private void AddEmptyState()
